@@ -1,36 +1,43 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { CreditCardIcon, SmartphoneIcon, CheckCircleIcon } from 'lucide-react';
+import { CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ModalPopup } from '../components/ModalPopup';
 import { DispenseAnimation } from '../components/DispenseAnimation';
+import { PayPalButton } from '../components/PayPalButton';
 import { useAppStore } from '../stores/appStore';
-
-type PaymentMethod = 'card' | 'mobile' | 'skip';
+import { medicines } from '../data/medicines';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { clearCart } = useAppStore();
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const { selectedMedicines, clearCart } = useAppStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handlePayment = (method: PaymentMethod) => {
-    setSelectedMethod(method);
-    setShowConfirmation(true);
-  };
+  // Calculate total
+  const total = selectedMedicines.reduce((sum, id) => {
+    const medicine = medicines.find((m) => m.id === id);
+    return sum + (medicine?.priceWithVat || 0);
+  }, 0);
 
-  const handleConfirm = () => {
-    setShowConfirmation(false);
+  const handlePaymentSuccess = (orderId: string) => {
+    console.log('Payment successful! Order ID:', orderId);
     setIsProcessing(true);
+    setError(null);
 
+    // Simulate dispensing animation
     setTimeout(() => {
       setIsProcessing(false);
       setIsComplete(true);
     }, 5000);
+  };
+
+  const handlePaymentError = (errorMessage: string) => {
+    console.error('Payment error:', errorMessage);
+    setError(errorMessage);
+    setIsProcessing(false);
   };
 
   const handleComplete = () => {
@@ -52,70 +59,67 @@ export function CheckoutPage() {
               Complete Your Purchase
             </h1>
             <p className="text-lg text-muted-foreground">
-              Select your preferred payment method
+              Pay securely with PayPal
             </p>
           </div>
 
           {!isProcessing && !isComplete && (
-            <>
-              <div className="text-center mb-6">
-                <p className="text-sm text-muted-foreground">
-                  🔒 Secure Payment • All transactions are encrypted and protected
-                </p>
+            <Card className="p-8 max-w-2xl mx-auto">
+              <div className="space-y-6">
+                {/* Order Summary */}
+                <div className="bg-muted/50 rounded-xl p-6">
+                  <h3 className="text-lg font-heading font-medium mb-4">Order Summary</h3>
+                  <div className="space-y-3">
+                    {selectedMedicines.map((id) => {
+                      const med = medicines.find((m) => m.id === id);
+                      if (!med) return null;
+                      return (
+                        <div key={id} className="flex justify-between items-center">
+                          <span className="text-sm">{med.shortName}</span>
+                          <span className="text-sm font-medium">€{med.priceWithVat.toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="border-t border-border pt-3 mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-base font-semibold">Total (VAT included)</span>
+                        <span className="text-xl font-bold text-primary">€{total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircleIcon className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-destructive">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* PayPal Button */}
+                <div className="flex flex-col items-center gap-4">
+                  <div className="text-center mb-2">
+                    <p className="text-sm text-muted-foreground">
+                      🔒 Secure Payment • All transactions are encrypted and protected
+                    </p>
+                  </div>
+                  <PayPalButton onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+                </div>
+
+                <div className="text-center pt-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/review')}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ← Back to Review
+                  </Button>
+                </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6">
-              <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all"
-                onClick={() => handlePayment('card')}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                    <CreditCardIcon className="w-10 h-10 text-primary" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-xl font-heading font-medium text-foreground">
-                    Card / NFC
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Pay with credit card or tap your phone
-                  </p>
-                </div>
-              </Card>
-
-              <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all"
-                onClick={() => handlePayment('mobile')}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-                    <SmartphoneIcon className="w-10 h-10 text-accent" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-xl font-heading font-medium text-foreground">
-                    Mobile Pay
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Use Apple Pay, Google Pay, or Samsung Pay
-                  </p>
-                </div>
-              </Card>
-
-              <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all"
-                onClick={() => handlePayment('skip')}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-secondary/10 flex items-center justify-center">
-                    <CheckCircleIcon className="w-10 h-10 text-secondary" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-xl font-heading font-medium text-foreground">
-                    Skip (Demo)
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Simulate payment for testing
-                  </p>
-                </div>
-              </Card>
-            </div>
-            </>
+            </Card>
           )}
 
           {isProcessing && (
@@ -205,40 +209,6 @@ export function CheckoutPage() {
           )}
         </motion.div>
       </div>
-
-      <ModalPopup
-        isOpen={showConfirmation}
-        onClose={() => setShowConfirmation(false)}
-        title="Confirm Payment"
-      >
-        <div className="space-y-6">
-          <p className="text-base text-foreground">
-            Are you sure you want to proceed with{' '}
-            {selectedMethod === 'card'
-              ? 'Card/NFC'
-              : selectedMethod === 'mobile'
-              ? 'Mobile Pay'
-              : 'Demo Mode'}
-            ?
-          </p>
-
-          <div className="flex gap-4">
-            <Button
-              onClick={handleConfirm}
-              className="flex-1 h-14 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              Confirm Payment
-            </Button>
-
-            <Button
-              onClick={() => setShowConfirmation(false)}
-              className="flex-1 h-14 rounded-xl bg-muted text-muted-foreground hover:bg-muted/80"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </ModalPopup>
     </div>
   );
 }

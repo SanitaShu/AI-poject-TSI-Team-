@@ -57,20 +57,48 @@ export const useAppStore = create<AppState>()(
 
       toggleMedicine: (id) =>
         set((state) => {
+          const medicine = medicines.find((m) => m.id === id);
+          if (!medicine) return state;
+
           const isSelected = state.selectedMedicines.includes(id);
+
           if (isSelected) {
+            // Deselect the medicine
             return {
               selectedMedicines: state.selectedMedicines.filter((medId) => medId !== id),
             };
           } else {
             // Check if product is in stock
             const stock = state.inventory.find((item) => item.medicineId === id)?.stock || 0;
-            if (stock > 0) {
+            if (stock <= 0) {
+              return state; // Out of stock
+            }
+
+            // Check if another medicine from the same category is already selected
+            const alreadySelectedFromCategory = state.selectedMedicines.find((medId) => {
+              const selectedMed = medicines.find((m) => m.id === medId);
+              return selectedMed?.group === medicine.group;
+            });
+
+            if (alreadySelectedFromCategory) {
+              // Replace the old selection with the new one (one per category rule)
+              return {
+                selectedMedicines: state.selectedMedicines
+                  .filter((medId) => {
+                    const med = medicines.find((m) => m.id === medId);
+                    return med?.group !== medicine.group;
+                  })
+                  .concat(id),
+              };
+            } else {
+              // Add new selection (max 5 categories = max 5 medicines)
+              if (state.selectedMedicines.length >= 5) {
+                return state; // Already have 5 items (one from each category)
+              }
               return {
                 selectedMedicines: [...state.selectedMedicines, id],
               };
             }
-            return state;
           }
         }),
 

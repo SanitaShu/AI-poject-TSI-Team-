@@ -37,50 +37,67 @@ The goal is to improve **healthcare accessibility**, **reduce medicine waste**, 
 
 ### ✅ **Completed Features**
 
-1. **Product Database** - 40 real OTC medicines from Latvia
-   - 5 categories (Digestive, Dermatology, Pain Relief, Cold/Allergy, Vitamins)
+1. **Product Database** - **ALL 50 real OTC medicines** from Latvia
+   - 5 categories with exactly **10 products each** (Digestive, Dermatology, Pain Relief, Cold/Allergy, Children & Special Care)
    - Complete pharmaceutical data (active ingredients, dosage, prices, storage)
    - Each product includes authorization numbers and package leaflet URLs
+   - Authentic prices from Latvia State Agency of Medicines
 
 2. **Inventory Management System**
    - 30 units per product per vending machine
    - Real-time stock tracking with persistence
-   - Transaction history
+   - Transaction history with PayPal order IDs
    - Purchase validation (checks stock before allowing purchases)
+   - Automatic inventory deduction on successful payment
 
-3. **Modern UI/UX**
+3. **PayPal Payment Integration** ✅
+   - Secure checkout with PayPal SDK
+   - Complete order summary before payment
+   - Real-time payment processing
+   - Transaction recording with order IDs
+   - Error handling and user feedback
+   - Support for PayPal, Credit/Debit Cards, and PayPal Credit
+
+4. **Smart Selection System** ✅
+   - **One medicine per category rule** enforced
+   - Maximum 5 items (one from each category)
+   - Automatic replacement if selecting different medicine from same category
+   - Visual indicators showing selected categories
+   - Out-of-stock prevention
+
+5. **Modern UI/UX**
    - Responsive design with Tailwind CSS
    - Smooth animations with Framer Motion
    - Mobile-friendly interface
    - Professional healthcare-focused design
+   - Real-time cart updates
 
-4. **State Management**
+6. **State Management**
    - Zustand with localStorage persistence
    - Shopping cart functionality
    - Admin panel foundation
+   - Persistent inventory across sessions
 
 ### 🚧 **Next Steps** (See `IMPLEMENTATION_GUIDE.md`)
 
-1. **OpenAI AI Assistant Integration**
+1. **OpenAI AI Assistant Integration** (Pending)
    - Symptom-based medicine recommendations
    - Conversational health guidance
    - Safety warnings and doctor referral logic
+   - **Instructions available in IMPLEMENTATION_GUIDE.md**
 
-2. **PayPal Payment Integration**
-   - Secure checkout flow
-   - Transaction recording
-   - Payment verification
-
-3. **Enhanced Age Verification**
+2. **Enhanced Age Verification** (Pending)
    - Webcam-based ID capture
    - Support for: Passport, ID Card, Residence Permit
    - OCR verification (future)
+   - **Instructions available in IMPLEMENTATION_GUIDE.md**
 
-4. **Admin Panel Enhancement**
+3. **Admin Panel Enhancement** (Pending)
    - Inventory management interface
    - Low stock alerts
    - Transaction monitoring
    - Restock functionality
+   - **Instructions available in IMPLEMENTATION_GUIDE.md**
 
 ### **📖 Quick Start**
 
@@ -95,26 +112,44 @@ npm run dev
 http://localhost:5173
 ```
 
-### **🔧 Full Setup with AI & Payment**
+### **🔧 PayPal Setup (Required for Payment)**
 
 ```bash
-# Install OpenAI and PayPal SDKs
-npm install openai@^4.20.1 @paypal/react-paypal-js
+# PayPal SDK is already installed
+# Just configure your .env file:
 
-# Configure .env file
-VITE_OPENAI_API_KEY=your_key_here
-VITE_PAYPAL_CLIENT_ID=your_paypal_id
+# Get your PayPal Client ID from: https://developer.paypal.com/dashboard/
+VITE_PAYPAL_CLIENT_ID=your_paypal_client_id
+VITE_PAYPAL_MODE=sandbox  # or 'live' for production
 ```
 
-**Detailed guide**: See `IMPLEMENTATION_GUIDE.md` for complete setup instructions.
+**To test PayPal in sandbox mode:**
+1. Create a developer account at https://developer.paypal.com/
+2. Go to Dashboard → Apps & Credentials → Create App
+3. Copy the **Client ID** from the sandbox section
+4. Paste it into `.env` as `VITE_PAYPAL_CLIENT_ID`
+5. Use sandbox test accounts to test payments
+
+### **💡 AI Assistant Setup (Optional)**
+
+```bash
+# Install OpenAI SDK
+npm install openai@^4.20.1
+
+# Configure .env file
+VITE_OPENAI_API_KEY=your_openai_key
+```
+
+**Detailed guide**: See `IMPLEMENTATION_GUIDE.md` for complete AI integration instructions.
 
 ### **📊 Medicine Database**
 
-- **Total Products**: 40 authentic OTC medicines
-- **Categories**: 5 (8 products each)
+- **Total Products**: **50 authentic OTC medicines** ✅
+- **Categories**: 5 (10 products each)
 - **Price Range**: €1.30 - €29.95 (VAT included)
 - **Data Source**: Latvia State Agency of Medicines
 - **Stock per Machine**: 30 units per product
+- **Selection Rule**: **One medicine per category** (max 5 total)
 
 ### **🛠️ Tech Stack**
 
