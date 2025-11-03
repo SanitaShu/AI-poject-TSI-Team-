@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 15% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 15% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 15% 20%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 89% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --tertiary: 142 72% 40%;
+    --tertiary-foreground: 0 0% 100%;
+    --muted: 210 20% 98%;
+    --muted-foreground: 222 15% 20%;
+    --accent: 142 72% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --warning: 0 72% 52%;
+    --border: 218 16% 88%;
+    --input: 218 16% 88%;
+    --ring: 217 91% 60%;
+    --radius: 1rem;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    @apply text-foreground;
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+@layer utilities {
+  .text-gradient-1 {
+    background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(219, 89%, 70%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-2 {
+    background: linear-gradient(135deg, hsl(142, 72%, 40%) 0%, hsl(142, 64%, 52%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

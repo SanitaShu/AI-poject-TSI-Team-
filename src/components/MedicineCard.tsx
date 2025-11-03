@@ -1,0 +1,102 @@
+import { motion } from 'framer-motion';
+import { PlusIcon, CheckIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+interface MedicineCardProps {
+  id: string;
+  name: string;
+  price: number;
+  group: number;
+  image?: string;
+  description?: string;
+  isSelected: boolean;
+  isDisabled: boolean;
+  onSelect: (id: string) => void;
+}
+
+export function MedicineCard({
+  id,
+  name,
+  price,
+  group,
+  image,
+  description,
+  isSelected,
+  isDisabled,
+  onSelect,
+}: MedicineCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+      whileHover={!isDisabled ? { scale: 1.02 } : {}}
+      whileTap={!isDisabled ? { scale: 0.98 } : {}}
+      className="p-2"
+    >
+      <Card
+        className={`relative overflow-hidden transition-all duration-200 ${
+          isSelected
+            ? 'ring-2 ring-accent shadow-lg bg-accent/5'
+            : isDisabled
+            ? 'opacity-50 cursor-not-allowed'
+            : 'hover:shadow-md cursor-pointer hover:border-accent/50'
+        }`}
+      >
+        {isDisabled && !isSelected && (
+          <div className="absolute inset-0 bg-neutral-900/5 backdrop-blur-[1px] z-10 flex items-center justify-center">
+            <span className="text-xs font-medium text-muted-foreground bg-background/90 px-3 py-1 rounded-full">
+              Group Limit Reached
+            </span>
+          </div>
+        )}
+        <div className="p-6">
+          {image && (
+            <div className="w-full h-32 mb-4 rounded-lg bg-neutral-100 flex items-center justify-center overflow-hidden">
+              <img
+                src={image}
+                alt={name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h3 className="text-lg font-heading font-medium text-foreground line-clamp-2">
+              {name}
+            </h3>
+
+            {description && (
+              <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xl font-heading font-semibold text-primary">
+                ${price.toFixed(2)}
+              </span>
+
+              <Button
+                onClick={() => !isDisabled && onSelect(id)}
+                disabled={isDisabled && !isSelected}
+                className={`h-12 w-12 rounded-lg ${
+                  isSelected
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-primary text-primary-foreground'
+                }`}
+              >
+                {isSelected ? (
+                  <CheckIcon className="w-5 h-5" strokeWidth={2} />
+                ) : (
+                  <PlusIcon className="w-5 h-5" strokeWidth={2} />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  );
+}
