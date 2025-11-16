@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   XIcon,
@@ -16,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { PDFViewerModal } from './PDFViewerModal';
 import type { Medicine } from '../data/medicines';
 
 interface MedicineDetailModalProps {
@@ -26,8 +24,6 @@ interface MedicineDetailModalProps {
 }
 
 export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetailModalProps) {
-  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
-
   if (!medicine) return null;
 
   // Generate expiry date (2 years from now as example)
@@ -112,16 +108,55 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                     </div>
                   </div>
 
-                  {/* Description */}
+                  {/* Description - Enhanced */}
                   <div className="mt-6">
                     <h3 className="text-base font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
                       <FileTextIcon className="w-5 h-5 text-primary" />
-                      Description
+                      What is this medicine?
                     </h3>
-                    <div className="p-4 bg-neutral-50 dark:bg-neutral-900/30 rounded-lg">
-                      <p className="text-sm text-foreground leading-relaxed">
+                    <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-900">
+                      <p className="text-base text-foreground leading-relaxed font-medium">
                         {medicine.description}
                       </p>
+                    </div>
+                  </div>
+
+                  {/* How to Use */}
+                  <div className="mt-6">
+                    <h3 className="text-base font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <PillIcon className="w-5 h-5 text-primary" />
+                      How to Use
+                    </h3>
+                    <div className="p-5 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 rounded-xl border border-green-200 dark:border-green-900">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 dark:bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-xs font-bold">1</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground mb-1">Read the Instructions</p>
+                            <p className="text-sm text-muted-foreground">Always read the package leaflet before using this medicine.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 dark:bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-xs font-bold">2</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground mb-1">Follow Dosage</p>
+                            <p className="text-sm text-muted-foreground">Take as directed. Do not exceed the recommended dose of {medicine.strength}.</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full bg-green-600 dark:bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-xs font-bold">3</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground mb-1">Store Properly</p>
+                            <p className="text-sm text-muted-foreground">{medicine.storageConditions}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -286,33 +321,30 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                     </div>
                   </div>
 
-                  {/* Bottom padding for sticky button */}
-                  <div className="h-20"></div>
                 </div>
 
-                {/* Sticky Footer Button */}
-                {medicine.packageLeafletUrl && (
-                  <div className="sticky bottom-0 p-4 bg-background border-t border-border shadow-lg">
-                    <Button
-                      onClick={() => setIsPDFViewerOpen(true)}
-                      className="flex items-center justify-center gap-2 w-full p-4 h-auto bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors shadow-md"
-                    >
-                      <FileTextIcon className="w-5 h-5" />
-                      <span className="font-medium">View Full Package Leaflet</span>
-                    </Button>
+                {/* Footer Note - All Information Displayed Above */}
+                <div className="px-6 py-4 bg-muted/30 border-t border-border">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      ✓ All medicine information is displayed above
+                    </p>
+                    {medicine.packageLeafletUrl && (
+                      <a
+                        href={medicine.packageLeafletUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      >
+                        <ExternalLinkIcon className="w-3 h-3" />
+                        View official PDF leaflet (opens in new tab)
+                      </a>
+                    )}
                   </div>
-                )}
+                </div>
               </Card>
             </motion.div>
           </div>
-
-          {/* PDF Viewer Modal */}
-          <PDFViewerModal
-            pdfUrl={medicine.packageLeafletUrl}
-            medicineName={medicine.name}
-            isOpen={isPDFViewerOpen}
-            onClose={() => setIsPDFViewerOpen(false)}
-          />
         </>
       )}
     </AnimatePresence>
