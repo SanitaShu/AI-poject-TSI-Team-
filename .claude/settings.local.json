@@ -6,7 +6,8 @@
       "Bash(timeout 5 npm run dev:*)",
       "Bash(npm install:*)",
       "Bash(pkill:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

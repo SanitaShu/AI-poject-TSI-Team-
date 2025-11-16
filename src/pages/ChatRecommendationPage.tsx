@@ -52,17 +52,67 @@ export function ChatRecommendationPage() {
     setInputValue('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+      if (!apiKey) {
+        throw new Error('OpenAI API key not configured');
+      }
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful AI health assistant that helps users find appropriate over-the-counter medicines based on their symptoms. Provide clear, concise recommendations. Always remind users to consult a healthcare professional for serious conditions.',
+            },
+            ...messages.slice(-10).map(m => ({
+              role: m.isUser ? 'user' : 'assistant',
+              content: m.text,
+            })),
+            {
+              role: 'user',
+              content: inputValue,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 500,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const aiResponseText = data.choices[0]?.message?.content || 'Sorry, I could not process your request.';
+
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Based on your symptoms, I recommend the following medicines: Pain Relief (Group 1) for headache, Cold & Flu Relief (Group 2) for congestion, and Vitamin C (Group 5) to boost your immune system. Would you like to add these to your cart?",
+        text: aiResponseText,
         isUser: false,
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error calling OpenAI API:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I encountered an error processing your request. Please try again.',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   const handleAddRecommended = () => {
