@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   XIcon,
@@ -16,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Medicine } from '../data/medicines';
+import { ProfessionalPDFViewer } from './ProfessionalPDFViewer';
 
 interface MedicineDetailModalProps {
   medicine: Medicine | null;
@@ -24,6 +26,9 @@ interface MedicineDetailModalProps {
 }
 
 export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetailModalProps) {
+  // PDF viewer state
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
+
   if (!medicine) return null;
 
   // Generate expiry date (2 years from now as example)
@@ -35,22 +40,23 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
   const batchNumber = `LT${new Date().getFullYear()}-${medicine.productId.replace(/[^0-9]/g, '')}`;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop - Enhanced for better readability */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/50 backdrop-blur-md z-50"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
-            }}
-          />
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop - Enhanced for better readability */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/50 backdrop-blur-md z-50"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+              }}
+            />
 
           {/* Modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -326,19 +332,19 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                 {/* Footer Note - All Information Displayed Above */}
                 <div className="px-6 py-4 bg-muted/30 border-t border-border">
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <p className="text-sm text-muted-foreground mb-3">
                       ✓ All medicine information is displayed above
                     </p>
                     {medicine.packageLeafletUrl && (
-                      <a
-                        href={medicine.packageLeafletUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      <Button
+                        onClick={() => setIsPdfViewerOpen(true)}
+                        variant="default"
+                        size="sm"
+                        className="inline-flex items-center gap-2"
                       >
-                        <ExternalLinkIcon className="w-3 h-3" />
-                        View official PDF leaflet (opens in new tab)
-                      </a>
+                        <FileTextIcon className="w-4 h-4" />
+                        View Package Leaflet (PDF)
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -346,7 +352,16 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
             </motion.div>
           </div>
         </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+
+      {/* PDF Viewer Modal */}
+      <ProfessionalPDFViewer
+        pdfUrl={medicine.packageLeafletUrl}
+        medicineName={medicine.name}
+        isOpen={isPdfViewerOpen}
+        onClose={() => setIsPdfViewerOpen(false)}
+      />
+    </>
   );
 }
