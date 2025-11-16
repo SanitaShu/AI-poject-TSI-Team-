@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { ChatBubble } from '../components/ChatBubble';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { useAppStore } from '../stores/appStore';
+import { medicineSystemPrompt } from '../utils/medicineSystemPrompt';
 
 interface Message {
   id: string;
@@ -21,7 +22,7 @@ export function ChatRecommendationPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! I'm your AI Health Assistant. I can help you find the right medicine for your symptoms. What are you experiencing today?",
+      text: "Hello! I'm your AI Health Assistant with complete knowledge of 50 over-the-counter medicines. 💊\n\nI can help you:\n✓ Find the right medicine for your symptoms (headache, fever, cough, allergies, etc.)\n✓ Explain WHY each medicine works\n✓ Provide complete details: dosage, manufacturer, active ingredients, storage\n✓ Give safety warnings and usage instructions\n\nJust describe your symptoms, and I'll recommend the best options from our pharmacy! What are you experiencing today?",
       isUser: false,
       timestamp: new Date(),
     },
@@ -70,7 +71,7 @@ export function ChatRecommendationPage() {
           messages: [
             {
               role: 'system',
-              content: 'You are a helpful AI health assistant that helps users find appropriate over-the-counter medicines based on their symptoms. Provide clear, concise recommendations. Always remind users to consult a healthcare professional for serious conditions.',
+              content: medicineSystemPrompt,
             },
             ...messages.slice(-10).map(m => ({
               role: m.isUser ? 'user' : 'assistant',
@@ -82,7 +83,7 @@ export function ChatRecommendationPage() {
             },
           ],
           temperature: 0.7,
-          max_tokens: 500,
+          max_tokens: 1000,
         }),
       });
 
@@ -124,7 +125,7 @@ export function ChatRecommendationPage() {
     setMessages([
       {
         id: '1',
-        text: "Hello! I'm your AI Health Assistant. I can help you find the right medicine for your symptoms. What are you experiencing today?",
+        text: "Hello! I'm your AI Health Assistant with complete knowledge of 50 over-the-counter medicines. 💊\n\nI can help you:\n✓ Find the right medicine for your symptoms (headache, fever, cough, allergies, etc.)\n✓ Explain WHY each medicine works\n✓ Provide complete details: dosage, manufacturer, active ingredients, storage\n✓ Give safety warnings and usage instructions\n\nJust describe your symptoms, and I'll recommend the best options from our pharmacy! What are you experiencing today?",
         isUser: false,
         timestamp: new Date(),
       },
