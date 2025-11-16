@@ -133,6 +133,7 @@ export function SelectMedicinePage() {
                           isSelected={selectedMedicines.includes(medicine.id)}
                           isDisabled={groupSelected && !selectedMedicines.includes(medicine.id)}
                           onSelect={toggleMedicine}
+                          medicine={medicine}
                         />
                       ))}
                     </div>
