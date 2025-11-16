@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   XIcon,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { PDFViewerModal } from './PDFViewerModal';
 import type { Medicine } from '../data/medicines';
 
 interface MedicineDetailModalProps {
@@ -24,6 +26,8 @@ interface MedicineDetailModalProps {
 }
 
 export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetailModalProps) {
+  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
+
   if (!medicine) return null;
 
   // Generate expiry date (2 years from now as example)
@@ -289,20 +293,26 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                 {/* Sticky Footer Button */}
                 {medicine.packageLeafletUrl && (
                   <div className="sticky bottom-0 p-4 bg-background border-t border-border shadow-lg">
-                    <a
-                      href={medicine.packageLeafletUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full p-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors shadow-md"
+                    <Button
+                      onClick={() => setIsPDFViewerOpen(true)}
+                      className="flex items-center justify-center gap-2 w-full p-4 h-auto bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors shadow-md"
                     >
-                      <ExternalLinkIcon className="w-5 h-5" />
+                      <FileTextIcon className="w-5 h-5" />
                       <span className="font-medium">View Full Package Leaflet</span>
-                    </a>
+                    </Button>
                   </div>
                 )}
               </Card>
             </motion.div>
           </div>
+
+          {/* PDF Viewer Modal */}
+          <PDFViewerModal
+            pdfUrl={medicine.packageLeafletUrl}
+            medicineName={medicine.name}
+            isOpen={isPDFViewerOpen}
+            onClose={() => setIsPDFViewerOpen(false)}
+          />
         </>
       )}
     </AnimatePresence>
