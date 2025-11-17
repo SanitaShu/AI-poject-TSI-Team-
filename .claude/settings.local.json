@@ -7,7 +7,8 @@
       "Bash(npm install:*)",
       "Bash(pkill:*)",
       "Bash(taskkill:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(node generate-fake-data.js:*)"
     ],
     "deny": [],
     "ask": []
