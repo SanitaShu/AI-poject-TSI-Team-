@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
+import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DispenseAnimation } from '../components/DispenseAnimation';
 import { PayPalButton } from '../components/PayPalButton';
 import { useAppStore } from '../stores/appStore';
 import { medicines } from '../data/medicines';
+import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -15,6 +16,10 @@ export function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [lastOrderId, setLastOrderId] = useState('');
+  const [receiptSent, setReceiptSent] = useState(false);
 
   // Calculate total
   const total = selectedMedicines.reduce((sum, id) => {
@@ -22,10 +27,61 @@ export function CheckoutPage() {
     return sum + (medicine?.priceWithVat || 0);
   }, 0);
 
-  const handlePaymentSuccess = (orderId: string) => {
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const sendReceiptEmail = async (orderId: string, customerEmail: string) => {
+    try {
+      // Generate receipt data
+      const machineId = import.meta.env.VITE_VENDING_MACHINE_ID || 'VM-001';
+      const receiptData = createReceiptData(
+        `PUR-${Date.now()}`,
+        selectedMedicines,
+        orderId,
+        customerEmail,
+        machineId,
+        'Riga Central Station' // Will be dynamic based on machine
+      );
+
+      const htmlReceipt = generateHTMLReceipt(receiptData);
+      const textReceipt = generateTextReceipt(receiptData);
+
+      // Log receipt (in production, send via email service)
+      console.log('Receipt generated for:', customerEmail);
+      console.log('Text Receipt:\n', textReceipt);
+
+      // TODO: Send email via backend service
+      // For now, download receipt as HTML file
+      const blob = new Blob([htmlReceipt], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${receiptData.purchaseId}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setReceiptSent(true);
+      return true;
+    } catch (error) {
+      console.error('Error sending receipt:', error);
+      return false;
+    }
+  };
+
+  const handlePaymentSuccess = async (orderId: string) => {
     console.log('Payment successful! Order ID:', orderId);
+    setLastOrderId(orderId);
     setIsProcessing(true);
     setError(null);
+
+    // Send receipt email if email provided
+    if (email && validateEmail(email)) {
+      await sendReceiptEmail(orderId, email);
+    }
 
     // Simulate dispensing animation
     setTimeout(() => {
@@ -87,6 +143,38 @@ export function CheckoutPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Email Input */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-foreground">
+                    Email Address (for receipt)
+                  </label>
+                  <div className="relative">
+                    <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError('');
+                      }}
+                      onBlur={() => {
+                        if (email && !validateEmail(email)) {
+                          setEmailError('Please enter a valid email address');
+                        }
+                      }}
+                      placeholder="your.email@example.com"
+                      className="w-full h-12 pl-12 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  {emailError && (
+                    <p className="text-xs text-destructive">{emailError}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    We'll send your receipt and purchase details to this email
+                  </p>
                 </div>
 
                 {/* Error Message */}
@@ -200,8 +288,17 @@ export function CheckoutPage() {
                   <Button
                     variant="outline"
                     className="h-16 px-12 text-lg rounded-xl"
+                    onClick={async () => {
+                      if (email && validateEmail(email)) {
+                        await sendReceiptEmail(lastOrderId, email);
+                        alert(`Receipt sent to ${email}!`);
+                      } else {
+                        alert('Please enter a valid email address first');
+                      }
+                    }}
                   >
-                    📧 Email Receipt
+                    <MailIcon className="w-5 h-5 mr-2" />
+                    {receiptSent ? 'Resend Receipt' : 'Download Receipt'}
                   </Button>
                 </motion.div>
               </div>
