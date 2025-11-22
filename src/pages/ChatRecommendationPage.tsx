@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { SendIcon, ShoppingBagIcon, RotateCcwIcon, HelpCircleIcon } from 'lucide-react';
+import { SendIcon, ShoppingBagIcon, RotateCcwIcon, HelpCircleIcon, MicIcon, MicOffIcon, Volume2Icon, VolumeXIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChatBubble } from '../components/ChatBubble';
 import { TypingIndicator } from '../components/TypingIndicator';
 import { useAppStore } from '../stores/appStore';
 import { medicineSystemPrompt } from '../utils/medicineSystemPrompt';
+import { voiceRecognition, textToSpeech, isSpeechRecognitionSupported, isTextToSpeechSupported } from '../services/voice';
 
 interface Message {
   id: string;
@@ -29,6 +30,10 @@ export function ChatRecommendationPage() {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -38,6 +43,138 @@ export function ChatRecommendationPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  // Log voice support on mount
+  useEffect(() => {
+    console.log('🎤 Voice Features Status:');
+    console.log('  Speech Recognition:', isSpeechRecognitionSupported() ? '✅ Supported' : '❌ Not Supported');
+    console.log('  Text-to-Speech:', isTextToSpeechSupported() ? '✅ Supported' : '❌ Not Supported');
+    console.log('  Browser:', navigator.userAgent);
+  }, []);
+
+  // Voice input handlers
+  const startListening = async () => {
+    console.log('🎤 Starting voice recognition...');
+
+    if (!isSpeechRecognitionSupported()) {
+      alert('❌ Speech recognition is not supported in your browser.\n\nPlease use:\n• Google Chrome\n• Microsoft Edge\n• Safari');
+      console.error('Speech recognition not supported');
+      return;
+    }
+
+    // Request microphone permission
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('✅ Microphone permission granted');
+      stream.getTracks().forEach(track => track.stop()); // Stop the stream, we just needed permission
+    } catch (error) {
+      console.error('❌ Microphone permission denied:', error);
+      alert('❌ Microphone access denied.\n\nPlease:\n1. Click the microphone icon in your browser address bar\n2. Allow microphone access\n3. Refresh the page and try again');
+      return;
+    }
+
+    setIsListening(true);
+    setInterimTranscript('');
+
+    voiceRecognition.startListening(
+      (transcript, isFinal) => {
+        console.log(`🎙️ Transcript (${isFinal ? 'final' : 'interim'}):`, transcript);
+        if (isFinal) {
+          // Append to existing input (for continuous long speech)
+          setInputValue(prev => {
+            const newText = prev ? `${prev} ${transcript}` : transcript;
+            console.log('✅ Added to transcript:', newText);
+            return newText;
+          });
+          setInterimTranscript('');
+        } else {
+          setInterimTranscript(transcript);
+        }
+      },
+      (error) => {
+        console.error('❌ Voice recognition error:', error);
+
+        let errorMessage = 'Voice recognition error occurred.';
+
+        if (error === 'network') {
+          errorMessage = '❌ Network Error\n\nSpeech recognition requires:\n• Internet connection\n• Access to Google servers\n\nPlease check:\n1. Your internet connection is working\n2. You\'re not behind a firewall blocking Google services\n3. Try refreshing the page\n\nAlternatively, type your message instead.';
+        } else if (error === 'not-allowed') {
+          errorMessage = '❌ Microphone Access Denied\n\nPlease:\n1. Click the lock/microphone icon in the address bar\n2. Allow microphone access\n3. Refresh and try again';
+        } else if (error === 'no-speech') {
+          errorMessage = '⚠️ No speech detected\n\nPlease speak clearly and try again.';
+        } else {
+          errorMessage = `❌ Error: ${error}\n\nPlease try again or type your message.`;
+        }
+
+        alert(errorMessage);
+        setIsListening(false);
+        setInterimTranscript('');
+      },
+      () => {
+        console.log('🎤 Voice recognition ended');
+        setIsListening(false);
+        setInterimTranscript('');
+      }
+    );
+  };
+
+  const stopListening = () => {
+    console.log('🛑 Stopping voice recognition');
+    voiceRecognition.stopListening();
+    setIsListening(false);
+    setInterimTranscript('');
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  // Text-to-speech handlers
+  const speakText = (text: string) => {
+    console.log('🔊 Speaking text:', text.substring(0, 50) + '...');
+
+    if (!isTextToSpeechSupported()) {
+      console.error('❌ Text-to-speech is not supported in your browser');
+      return;
+    }
+
+    setIsSpeaking(true);
+
+    textToSpeech.speak(
+      text,
+      {
+        rate: 1.0,
+        pitch: 1.0,
+        volume: 1.0,
+      },
+      () => {
+        console.log('✅ Finished speaking');
+        setIsSpeaking(false);
+      },
+      (error) => {
+        console.error('❌ Text-to-speech error:', error);
+        setIsSpeaking(false);
+      }
+    );
+  };
+
+  const stopSpeaking = () => {
+    textToSpeech.stop();
+    setIsSpeaking(false);
+  };
+
+  const toggleAutoSpeak = () => {
+    const newAutoSpeak = !autoSpeak;
+    setAutoSpeak(newAutoSpeak);
+
+    if (!newAutoSpeak) {
+      stopSpeaking();
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -102,6 +239,11 @@ export function ChatRecommendationPage() {
       };
 
       setMessages((prev) => [...prev, aiResponse]);
+
+      // Auto-speak AI response if enabled
+      if (autoSpeak) {
+        speakText(aiResponseText);
+      }
     } catch (error) {
       console.error('Error calling OpenAI API:', error);
       const errorMessage: Message = {
@@ -111,6 +253,11 @@ export function ChatRecommendationPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+
+      // Speak error message if auto-speak is enabled
+      if (autoSpeak) {
+        speakText(errorMessage.text);
+      }
     } finally {
       setIsTyping(false);
     }
@@ -169,6 +316,19 @@ export function ChatRecommendationPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button
+                    onClick={toggleAutoSpeak}
+                    variant={autoSpeak ? "default" : "ghost"}
+                    size="icon"
+                    className={`h-10 w-10 ${autoSpeak ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                    title={autoSpeak ? "Auto-speak enabled (click to disable)" : "Enable auto-speak"}
+                  >
+                    {autoSpeak ? (
+                      <Volume2Icon className="w-4 h-4 text-white" strokeWidth={2} />
+                    ) : (
+                      <VolumeXIcon className="w-4 h-4" strokeWidth={2} />
+                    )}
+                  </Button>
+                  <Button
                     onClick={handleClearChat}
                     variant="ghost"
                     size="icon"
@@ -205,20 +365,88 @@ export function ChatRecommendationPage() {
             </div>
 
             <div className="border-t border-border p-6 bg-background">
+              {/* Interim transcript indicator */}
+              <AnimatePresence>
+                {isListening && interimTranscript && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mb-3 px-4 py-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+                  >
+                    <p className="text-sm text-blue-700 dark:text-blue-300 italic">
+                      Listening: {interimTranscript}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Speaking indicator */}
+              <AnimatePresence>
+                {isSpeaking && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mb-3 px-4 py-2 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                    >
+                      <Volume2Icon className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    </motion.div>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      Speaking...
+                    </p>
+                    <button
+                      onClick={stopSpeaking}
+                      className="ml-auto text-xs text-green-600 dark:text-green-400 hover:underline"
+                    >
+                      Stop
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="flex gap-4">
                 <input
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Describe your symptoms..."
-                  className="flex-1 h-14 px-6 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  onKeyPress={(e) => e.key === 'Enter' && !isListening && handleSend()}
+                  placeholder={isListening ? "Listening..." : "Describe your symptoms..."}
+                  disabled={isListening}
+                  className="flex-1 h-14 px-6 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 />
+
+                {/* Microphone button */}
+                <Button
+                  onClick={toggleListening}
+                  variant={isListening ? "default" : "outline"}
+                  className={`h-14 px-6 rounded-xl ${
+                    isListening
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'border-2 hover:bg-accent'
+                  }`}
+                  title={isListening ? "Stop listening" : "Start voice input"}
+                >
+                  <motion.div
+                    animate={isListening ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  >
+                    {isListening ? (
+                      <MicOffIcon className="w-5 h-5" strokeWidth={2} />
+                    ) : (
+                      <MicIcon className="w-5 h-5" strokeWidth={2} />
+                    )}
+                  </motion.div>
+                </Button>
 
                 <Button
                   onClick={handleSend}
-                  disabled={!inputValue.trim()}
-                  className="h-14 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+                  disabled={!inputValue.trim() || isListening}
+                  className="h-14 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   <SendIcon className="w-5 h-5" strokeWidth={2} />
                 </Button>
