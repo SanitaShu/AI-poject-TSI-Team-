@@ -9,10 +9,12 @@ import { PayPalButton } from '../components/PayPalButton';
 import { useAppStore } from '../stores/appStore';
 import { medicines } from '../data/medicines';
 import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
+import { saveTransaction } from '../services/database';
+import { sendPurchaseEmails } from '../services/email';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { selectedMedicines, clearCart } = useAppStore();
+  const { selectedMedicines, clearCart, vendingMachineId, processPurchase, addTransaction } = useAppStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +22,7 @@ export function CheckoutPage() {
   const [emailError, setEmailError] = useState('');
   const [lastOrderId, setLastOrderId] = useState('');
   const [receiptSent, setReceiptSent] = useState(false);
+  const [isSavingTransaction, setIsSavingTransaction] = useState(false);
 
   // Calculate total
   const total = selectedMedicines.reduce((sum, id) => {
@@ -76,18 +79,102 @@ export function CheckoutPage() {
     console.log('Payment successful! Order ID:', orderId);
     setLastOrderId(orderId);
     setIsProcessing(true);
+    setIsSavingTransaction(true);
     setError(null);
 
-    // Send receipt email if email provided
-    if (email && validateEmail(email)) {
-      await sendReceiptEmail(orderId, email);
-    }
+    try {
+      // Validate email is provided
+      if (!email || !validateEmail(email)) {
+        setError('Please provide a valid email address');
+        setIsProcessing(false);
+        setIsSavingTransaction(false);
+        return;
+      }
 
-    // Simulate dispensing animation
-    setTimeout(() => {
+      // Prepare transaction data
+      const transactionId = `TXN-${Date.now()}`;
+      const items = selectedMedicines.map((id) => {
+        const medicine = medicines.find((m) => m.id === id);
+        return {
+          medicineId: id,
+          medicineName: medicine?.shortName || 'Unknown',
+          quantity: 1,
+          price: medicine?.priceWithVat || 0,
+        };
+      });
+
+      // Save transaction to database
+      const dbResult = await saveTransaction({
+        transactionId,
+        customerEmail: email,
+        total,
+        paymentMethod: 'paypal',
+        status: 'completed',
+        vendingMachineId,
+        items,
+      });
+
+      if (!dbResult.success) {
+        console.error('Failed to save transaction to database:', dbResult.error);
+        setError('Failed to save transaction. Please contact support.');
+      }
+
+      // Add transaction to local store
+      addTransaction({
+        id: transactionId,
+        date: new Date(),
+        medicines: items.map((item) => ({
+          id: item.medicineId,
+          name: item.medicineName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total,
+        paymentMethod: 'paypal',
+        status: 'completed',
+      });
+
+      // Process purchase (update inventory)
+      const purchaseSuccess = processPurchase(selectedMedicines);
+      if (!purchaseSuccess) {
+        console.error('Failed to update inventory');
+      }
+
+      // Send emails (customer receipt + admin notification)
+      const emailResult = await sendPurchaseEmails({
+        transactionId,
+        customerEmail: email,
+        date: new Date().toLocaleString(),
+        items: items.map((item) => ({
+          name: item.medicineName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total,
+        vendingMachineId,
+      });
+
+      if (emailResult.success) {
+        setReceiptSent(true);
+        console.log('✅ Emails sent successfully');
+      } else {
+        console.error('Failed to send emails:', emailResult);
+        // Don't show error to user as transaction was successful
+      }
+
+      setIsSavingTransaction(false);
+
+      // Simulate dispensing animation
+      setTimeout(() => {
+        setIsProcessing(false);
+        setIsComplete(true);
+      }, 3000);
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      setError('An error occurred while processing your payment. Please contact support.');
       setIsProcessing(false);
-      setIsComplete(true);
-    }, 5000);
+      setIsSavingTransaction(false);
+    }
   };
 
   const handlePaymentError = (errorMessage: string) => {
@@ -147,8 +234,9 @@ export function CheckoutPage() {
 
                 {/* Email Input */}
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-foreground">
-                    Email Address (for receipt)
+                  <label htmlFor="email" className="text-sm font-medium text-foreground flex items-center gap-2">
+                    Email Address (Required)
+                    <span className="text-destructive">*</span>
                   </label>
                   <div className="relative">
                     <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -156,6 +244,7 @@ export function CheckoutPage() {
                       id="email"
                       type="email"
                       value={email}
+                      required
                       onChange={(e) => {
                         setEmail(e.target.value);
                         setEmailError('');
@@ -166,14 +255,21 @@ export function CheckoutPage() {
                         }
                       }}
                       placeholder="your.email@example.com"
-                      className="w-full h-12 pl-12 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      className={`w-full h-12 pl-12 pr-4 rounded-lg border ${
+                        email && validateEmail(email)
+                          ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20'
+                          : 'border-input'
+                      } bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring`}
                     />
+                    {email && validateEmail(email) && (
+                      <CheckCircleIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    )}
                   </div>
                   {emailError && (
                     <p className="text-xs text-destructive">{emailError}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    We'll send your receipt and purchase details to this email
+                    📧 Receipt will be sent to this email • Admin will be notified at touficjandah@gmail.com
                   </p>
                 </div>
 
@@ -189,12 +285,22 @@ export function CheckoutPage() {
 
                 {/* PayPal Button */}
                 <div className="flex flex-col items-center gap-4">
-                  <div className="text-center mb-2">
-                    <p className="text-sm text-muted-foreground">
-                      🔒 Secure Payment • All transactions are encrypted and protected
-                    </p>
-                  </div>
-                  <PayPalButton onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+                  {!email || !validateEmail(email) ? (
+                    <div className="w-full bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                        ⚠️ Please enter a valid email address to proceed with payment
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-center mb-2">
+                        <p className="text-sm text-muted-foreground">
+                          🔒 Secure Payment • All transactions are encrypted and protected
+                        </p>
+                      </div>
+                      <PayPalButton onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+                    </>
+                  )}
                 </div>
 
                 <div className="text-center pt-4">

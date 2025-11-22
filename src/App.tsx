@@ -4,6 +4,7 @@ import { AppRouter } from './components/AppRouter';
 import { useIdleTimer } from './hooks/useIdleTimer';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from './stores/appStore';
+import { initEmailJS } from './services/email';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -32,6 +33,12 @@ function AppContent() {
 }
 
 function App() {
+  // Initialize EmailJS on app mount
+  useEffect(() => {
+    initEmailJS();
+    console.log('EmailJS initialized');
+  }, []);
+
   return (
     <BrowserRouter>
       <AppContent />

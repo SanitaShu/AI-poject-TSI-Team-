@@ -8,9 +8,17 @@
       "Bash(pkill:*)",
       "Bash(taskkill:*)",
       "Bash(test:*)",
-      "Bash(node generate-fake-data.js:*)"
+      "Bash(node generate-fake-data.js:*)",
+      "Bash(where claude:*)",
+      "Bash(claude mcp list:*)",
+      "Bash(claude mcp call:*)",
+      "Bash(claude mcp --help:*)",
+      "Bash(claude mcp get supabase)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }
