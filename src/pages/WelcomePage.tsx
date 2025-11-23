@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCartIcon, ShieldIcon } from 'lucide-react';
+import { ShoppingCartIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function WelcomePage() {
@@ -76,14 +76,6 @@ export function WelcomePage() {
             >
               <ShoppingCartIcon className="w-6 h-6 mr-3" strokeWidth={2} />
               Start Purchase
-            </Button>
-
-            <Button
-              onClick={() => navigate('/admin-login')}
-              className="h-16 px-12 text-lg rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all hover:scale-105 shadow-lg"
-            >
-              <ShieldIcon className="w-6 h-6 mr-3" strokeWidth={2} />
-              Admin Login
             </Button>
           </motion.div>
 
