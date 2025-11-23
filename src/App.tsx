@@ -9,12 +9,13 @@ import { initEmailJS } from './services/email';
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { initializeInventory } = useAppStore();
+  const { initializeInventory, initializeAllMachinesInventory } = useAppStore();
 
   // Initialize inventory on app load
   useEffect(() => {
     initializeInventory();
-  }, [initializeInventory]);
+    initializeAllMachinesInventory();
+  }, [initializeInventory, initializeAllMachinesInventory]);
 
   // Check if user is on checkout/payment pages
   const isCheckoutOrPayment = location.pathname === '/checkout' ||

@@ -20,9 +20,9 @@ export function AppRouter() {
         <Route path="select-medicine" element={<SelectMedicinePage />} />
         <Route path="review" element={<ReviewAndCheckoutPage />} />
         <Route path="checkout" element={<CheckoutPage />} />
-        <Route path="admin-login" element={<AdminLogin />} />
+        <Route path="admin" element={<AdminLogin />} />
         <Route
-          path="admin"
+          path="admin/dashboard"
           element={
             <ProtectedRoute requireAdmin>
               <AdminPanelPage />

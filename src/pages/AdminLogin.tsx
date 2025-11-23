@@ -15,7 +15,7 @@ export function AdminLogin() {
   const handleLogin = () => {
     if (password === 'admin123') {
       setAdmin(true);
-      navigate('/admin');
+      navigate('/admin/dashboard');
     } else {
       setError('Invalid password');
     }

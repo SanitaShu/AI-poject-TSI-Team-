@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { medicines } from '../data/medicines';
+import { vendingMachineLocations } from '../data/vendingMachines';
 
 export interface InventoryItem {
   medicineId: string;
@@ -11,10 +12,16 @@ export interface InventoryItem {
 export interface Transaction {
   id: string;
   date: Date;
+  vendingMachineId: string;
   medicines: { id: string; name: string; quantity: number; price: number }[];
   total: number;
   paymentMethod: 'paypal';
   status: 'completed' | 'pending' | 'failed';
+}
+
+export interface VendingMachineInventory {
+  vendingMachineId: string;
+  inventory: InventoryItem[];
 }
 
 interface AppState {
@@ -23,6 +30,7 @@ interface AppState {
   selectedMedicines: string[];
   recommendedMedicines: string[];
   inventory: InventoryItem[];
+  allMachinesInventory: VendingMachineInventory[];
   transactions: Transaction[];
   verificationMethod: 'passport' | 'residence_permit' | 'id_card' | null;
   vendingMachineId: string;
@@ -33,11 +41,17 @@ interface AppState {
   clearCart: () => void;
   setVerificationMethod: (method: 'passport' | 'residence_permit' | 'id_card' | null) => void;
   initializeInventory: () => void;
+  initializeAllMachinesInventory: () => void;
   updateStock: (medicineId: string, quantity: number) => void;
+  updateMachineStock: (vendingMachineId: string, medicineId: string, quantity: number) => void;
   restockProduct: (medicineId: string, quantity: number) => void;
+  restockMachineProduct: (vendingMachineId: string, medicineId: string, quantity: number) => void;
   addTransaction: (transaction: Transaction) => void;
   getStock: (medicineId: string) => number;
+  getMachineStock: (vendingMachineId: string, medicineId: string) => number;
   processPurchase: (medicineIds: string[]) => boolean;
+  getMachineInventory: (vendingMachineId: string) => InventoryItem[];
+  getAllMachinesTransactions: () => Transaction[];
 }
 
 export const useAppStore = create<AppState>()(
@@ -48,6 +62,7 @@ export const useAppStore = create<AppState>()(
       selectedMedicines: [],
       recommendedMedicines: [],
       inventory: [],
+      allMachinesInventory: [],
       transactions: [],
       verificationMethod: null,
       vendingMachineId: 'VM-001',
@@ -175,11 +190,74 @@ export const useAppStore = create<AppState>()(
 
         return true;
       },
+
+      initializeAllMachinesInventory: () => {
+        const state = get();
+        if (state.allMachinesInventory.length === 0) {
+          const allInventories: VendingMachineInventory[] = vendingMachineLocations.map((machine) => ({
+            vendingMachineId: machine.id,
+            inventory: medicines.map((med) => ({
+              medicineId: med.id,
+              stock: Math.floor(Math.random() * 40), // Random stock between 0-40 for demo
+              lastRestocked: new Date(Date.now() - Math.random() * 10 * 24 * 60 * 60 * 1000), // Random date within last 10 days
+            })),
+          }));
+          set({ allMachinesInventory: allInventories });
+        }
+      },
+
+      updateMachineStock: (vendingMachineId, medicineId, quantity) =>
+        set((state) => ({
+          allMachinesInventory: state.allMachinesInventory.map((machine) =>
+            machine.vendingMachineId === vendingMachineId
+              ? {
+                  ...machine,
+                  inventory: machine.inventory.map((item) =>
+                    item.medicineId === medicineId
+                      ? { ...item, stock: Math.max(0, item.stock + quantity) }
+                      : item
+                  ),
+                }
+              : machine
+          ),
+        })),
+
+      restockMachineProduct: (vendingMachineId, medicineId, quantity) =>
+        set((state) => ({
+          allMachinesInventory: state.allMachinesInventory.map((machine) =>
+            machine.vendingMachineId === vendingMachineId
+              ? {
+                  ...machine,
+                  inventory: machine.inventory.map((item) =>
+                    item.medicineId === medicineId
+                      ? { ...item, stock: quantity, lastRestocked: new Date() }
+                      : item
+                  ),
+                }
+              : machine
+          ),
+        })),
+
+      getMachineStock: (vendingMachineId, medicineId) => {
+        const machine = get().allMachinesInventory.find((m) => m.vendingMachineId === vendingMachineId);
+        const item = machine?.inventory.find((item) => item.medicineId === medicineId);
+        return item?.stock || 0;
+      },
+
+      getMachineInventory: (vendingMachineId) => {
+        const machine = get().allMachinesInventory.find((m) => m.vendingMachineId === vendingMachineId);
+        return machine?.inventory || [];
+      },
+
+      getAllMachinesTransactions: () => {
+        return get().transactions;
+      },
     }),
     {
       name: 'vending-machine-storage',
       partialize: (state) => ({
         inventory: state.inventory,
+        allMachinesInventory: state.allMachinesInventory,
         transactions: state.transactions,
         vendingMachineId: state.vendingMachineId,
       }),
