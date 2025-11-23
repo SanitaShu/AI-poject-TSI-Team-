@@ -44,6 +44,25 @@ export const translations = {
       tryAgain: 'Try Again',
       takePhoto: 'Take Photo',
       retake: 'Retake Photo',
+      faceRecognition: 'Face Recognition',
+      capturingFace: 'Capturing your face for purchase tracking...',
+      faceDetected: 'Face detected successfully!',
+      noFaceDetected: 'No face detected. Please look at the camera.',
+      loadingModels: 'Loading face recognition models...',
+      scanFace: 'Scan Face',
+    },
+
+    // Purchase Restrictions
+    purchaseRestrictions: {
+      welcomeBack: 'Welcome back!',
+      returningUser: 'We recognized you from your previous visit.',
+      restrictedCategories: 'Restricted Categories',
+      categoryBlocked: 'You purchased from this category within 24 hours',
+      timeRemaining: 'Available in: {time}',
+      categoryAvailable: 'Category available for purchase',
+      allCategoriesBlocked: 'All categories are currently restricted',
+      comeBackLater: 'Please come back after 24 hours from your last purchase',
+      restrictionInfo: 'For your safety, you can only purchase from each medicine category once every 24 hours.',
     },
 
     // AI Assistant
@@ -335,6 +354,25 @@ export const translations = {
       tryAgain: 'Mēģināt Vēlreiz',
       takePhoto: 'Uzņemt Foto',
       retake: 'Pārņemt Foto',
+      faceRecognition: 'Sejas Atpazīšana',
+      capturingFace: 'Uzņemam jūsu seju pirkumu izsekošanai...',
+      faceDetected: 'Seja veiksmīgi noteikta!',
+      noFaceDetected: 'Seja nav noteikta. Lūdzu, skatieties kamerā.',
+      loadingModels: 'Ielādē sejas atpazīšanas modeļus...',
+      scanFace: 'Skenēt Seju',
+    },
+
+    // Purchase Restrictions
+    purchaseRestrictions: {
+      welcomeBack: 'Laipni lūdzam atpakaļ!',
+      returningUser: 'Mēs jūs atpazinām no jūsu iepriekšējā apmeklējuma.',
+      restrictedCategories: 'Ierobežotās Kategorijas',
+      categoryBlocked: 'Jūs iegādājāties no šīs kategorijas pēdējo 24 stundu laikā',
+      timeRemaining: 'Pieejams pēc: {time}',
+      categoryAvailable: 'Kategorija pieejama pirkumam',
+      allCategoriesBlocked: 'Visas kategorijas pašlaik ir ierobežotas',
+      comeBackLater: 'Lūdzu, atgriezieties pēc 24 stundām no jūsu pēdējā pirkuma',
+      restrictionInfo: 'Jūsu drošībai jūs varat iegādāties no katras medikamentu kategorijas tikai reizi 24 stundās.',
     },
 
     // AI Assistant

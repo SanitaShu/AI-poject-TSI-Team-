@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { medicines } from '../data/medicines';
 import { vendingMachineLocations } from '../data/vendingMachines';
+import { useFaceRecognitionStore } from './faceRecognitionStore';
 
 export interface InventoryItem {
   medicineId: string;
@@ -157,10 +158,34 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      addTransaction: (transaction) =>
+      addTransaction: (transaction) => {
         set((state) => ({
           transactions: [transaction, ...state.transactions],
-        })),
+        }));
+
+        // Record purchases by category for face recognition tracking
+        const { currentUserId, addPurchaseRecord } = useFaceRecognitionStore.getState();
+
+        if (currentUserId) {
+          // Group medicines by category
+          const categoriesMap = new Map<number, string[]>();
+
+          transaction.medicines.forEach((medicine) => {
+            const medicineData = medicines.find((m) => m.id === medicine.id);
+            if (medicineData) {
+              const categoryId = medicineData.group;
+              const existingMedicines = categoriesMap.get(categoryId) || [];
+              existingMedicines.push(medicine.id);
+              categoriesMap.set(categoryId, existingMedicines);
+            }
+          });
+
+          // Record purchase for each category
+          categoriesMap.forEach((medicineIds, categoryId) => {
+            addPurchaseRecord(currentUserId, categoryId, medicineIds);
+          });
+        }
+      },
 
       getStock: (medicineId) => {
         const item = get().inventory.find((item) => item.medicineId === medicineId);
