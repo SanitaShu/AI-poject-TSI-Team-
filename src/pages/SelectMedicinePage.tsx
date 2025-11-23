@@ -11,10 +11,12 @@ import {
 import { MedicineCard } from '../components/MedicineCard';
 import { useAppStore } from '../stores/appStore';
 import { medicines, medicineGroups } from '../data/medicines';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function SelectMedicinePage() {
   const navigate = useNavigate();
   const { selectedMedicines, toggleMedicine } = useAppStore();
+  const { t } = useTranslation();
 
   const getMedicinesByGroup = (group: number) => {
     return medicines.filter((med) => med.group === group);
@@ -44,10 +46,10 @@ export function SelectMedicinePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-                Select Your Medicines
+                {t.medicineSelection.title}
               </h1>
               <p className="text-lg text-muted-foreground mb-2">
-                Choose one medicine from each category (maximum 5 items)
+                {t.medicineSelection.subtitleGroups}
               </p>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
@@ -67,7 +69,7 @@ export function SelectMedicinePage() {
                   ))}
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  Selected {selectedMedicines.length} of 5 groups
+                  {t.medicineSelection.selectedGroups.replace('{count}', selectedMedicines.length.toString())}
                 </span>
               </div>
             </div>
@@ -78,7 +80,7 @@ export function SelectMedicinePage() {
               className="h-14 px-8 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-50 sticky top-24 shadow-lg"
             >
               <ShoppingCartIcon className="w-5 h-5 mr-3" strokeWidth={2} />
-              Continue ({selectedMedicines.length})
+              {t.medicineSelection.continueCount.replace('{count}', selectedMedicines.length.toString())}
             </Button>
           </div>
 
@@ -113,7 +115,7 @@ export function SelectMedicinePage() {
                         {groupSelected && (
                           <span className="px-4 py-2 rounded-lg bg-accent/10 text-accent text-sm font-normal flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                            Selected
+                            {t.medicineSelection.selected}
                           </span>
                         )}
                       </div>

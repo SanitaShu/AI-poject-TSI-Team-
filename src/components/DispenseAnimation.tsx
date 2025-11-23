@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import { PillIcon } from 'lucide-react';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function DispenseAnimation() {
+  const { t } = useTranslation();
   return (
     <div className="relative w-full h-64 bg-card border border-border rounded-2xl overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center">
@@ -28,7 +30,7 @@ export function DispenseAnimation() {
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-accent/20 to-transparent" />
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-lg font-heading font-medium text-foreground">Dispensing...</p>
+        <p className="text-lg font-heading font-medium text-foreground">{t.medicineDetails.dispensing}</p>
       </div>
     </div>
   );

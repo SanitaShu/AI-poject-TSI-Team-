@@ -1,0 +1,9 @@
+import { useLanguageStore } from '../stores/languageStore';
+import { translations } from '../i18n/translations';
+
+export function useTranslation() {
+  const language = useLanguageStore((state) => state.language);
+  const t = translations[language];
+
+  return { t, language };
+}

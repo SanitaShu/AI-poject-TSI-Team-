@@ -2,9 +2,11 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingCartIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function WelcomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-[calc(100vh-180px)] flex items-center justify-center px-8 py-12 relative overflow-hidden">
@@ -55,12 +57,11 @@ export function WelcomePage() {
             </motion.div>
 
             <h1 className="text-5xl md:text-6xl font-heading font-semibold text-foreground">
-              Welcome to Smart Medicine Vending
+              {t.welcome.title}
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Your 24/7 AI-powered health assistant. Get personalized medicine recommendations
-              and purchase safely with age verification.
+              {t.welcome.subtitle}
             </p>
           </div>
 
@@ -75,7 +76,7 @@ export function WelcomePage() {
               className="h-16 px-12 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all hover:scale-105 shadow-lg"
             >
               <ShoppingCartIcon className="w-6 h-6 mr-3" strokeWidth={2} />
-              Start Purchase
+              {t.welcome.startPurchase}
             </Button>
           </motion.div>
 
@@ -86,10 +87,10 @@ export function WelcomePage() {
             className="pt-8 space-y-4"
           >
             <p className="text-sm text-muted-foreground">
-              Age verification required for purchase • AI-powered recommendations • Secure payment
+              {t.welcome.features}
             </p>
             <p className="text-xs text-muted-foreground italic">
-              ⚕️ For serious medical conditions, please consult your pharmacist or doctor
+              {t.welcome.disclaimer}
             </p>
           </motion.div>
         </motion.div>

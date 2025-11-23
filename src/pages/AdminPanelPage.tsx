@@ -19,8 +19,10 @@ import { useAppStore } from '../stores/appStore';
 import { vendingMachineLocations } from '../data/vendingMachines';
 import { medicines } from '../data/medicines';
 import { recipes } from '../data/vendingMachines';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function AdminPanelPage() {
+  const { t } = useTranslation();
   const { allMachinesInventory, transactions, getMachineInventory, restockMachineProduct } = useAppStore();
   const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<string | null>(null);
@@ -73,22 +75,22 @@ export function AdminPanelPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-                Admin Dashboard
+                {t.admin.title}
               </h1>
               <p className="text-lg text-muted-foreground">
-                Manage all vending machines, inventory, and operations
+                {t.admin.subtitle}
               </p>
             </div>
 
             <div className="flex gap-4">
               <Card className="px-6 py-4">
-                <div className="text-sm text-muted-foreground">Total Machines</div>
+                <div className="text-sm text-muted-foreground">{t.admin.totalMachines}</div>
                 <div className="text-2xl font-semibold text-foreground">
                   {vendingMachineLocations.length}
                 </div>
               </Card>
               <Card className="px-6 py-4">
-                <div className="text-sm text-muted-foreground">Stock Value</div>
+                <div className="text-sm text-muted-foreground">{t.admin.stockValue}</div>
                 <div className="text-2xl font-semibold text-foreground">
                   ${getTotalStockValue().toFixed(2)}
                 </div>
@@ -100,23 +102,23 @@ export function AdminPanelPage() {
             <TabsList className="grid w-full max-w-3xl grid-cols-5 h-14">
               <TabsTrigger value="overview" className="text-base">
                 <ActivityIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                Overview
+                {t.admin.overview}
               </TabsTrigger>
               <TabsTrigger value="locations" className="text-base">
                 <MapPinIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                Locations
+                {t.admin.locations}
               </TabsTrigger>
               <TabsTrigger value="inventory" className="text-base">
                 <PackageIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                Inventory
+                {t.admin.inventory}
               </TabsTrigger>
               <TabsTrigger value="purchases" className="text-base">
                 <TrendingUpIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                Purchases
+                {t.admin.purchases}
               </TabsTrigger>
               <TabsTrigger value="recipes" className="text-base">
                 <FileTextIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                Recipes
+                {t.admin.recipes}
               </TabsTrigger>
             </TabsList>
 
@@ -144,7 +146,7 @@ export function AdminPanelPage() {
                           {machine.status === 'active' && <CheckCircleIcon className="w-3 h-3 inline mr-1" />}
                           {machine.status === 'maintenance' && <WrenchIcon className="w-3 h-3 inline mr-1" />}
                           {machine.status === 'offline' && <XCircleIcon className="w-3 h-3 inline mr-1" />}
-                          {machine.status}
+                          {t.admin[machine.status as keyof typeof t.admin]}
                         </div>
                       </div>
 
@@ -159,19 +161,19 @@ export function AdminPanelPage() {
                           {alerts.critical > 0 && (
                             <div className="flex items-center gap-2 text-red-600">
                               <AlertCircleIcon className="w-5 h-5" />
-                              <span className="text-sm font-medium">{alerts.critical} Critical</span>
+                              <span className="text-sm font-medium">{alerts.critical} {t.admin.critical}</span>
                             </div>
                           )}
                           {alerts.warning > 0 && (
                             <div className="flex items-center gap-2 text-yellow-600">
                               <HelpCircleIcon className="w-5 h-5" />
-                              <span className="text-sm font-medium">{alerts.warning} Warning</span>
+                              <span className="text-sm font-medium">{alerts.warning} {t.admin.warning}</span>
                             </div>
                           )}
                           {alerts.critical === 0 && alerts.warning === 0 && (
                             <div className="flex items-center gap-2 text-green-600">
                               <CheckCircleIcon className="w-5 h-5" />
-                              <span className="text-sm font-medium">All Good</span>
+                              <span className="text-sm font-medium">{t.admin.allGood}</span>
                             </div>
                           )}
                         </div>
@@ -180,7 +182,7 @@ export function AdminPanelPage() {
                           onClick={() => viewMachineDetails(machine.id)}
                           className="w-full mt-4 h-10 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
                         >
-                          View Details
+                          {t.admin.viewDetails}
                         </Button>
                       </div>
                     </Card>
@@ -193,7 +195,7 @@ export function AdminPanelPage() {
             <TabsContent value="locations" className="space-y-4">
               <Card className="p-8">
                 <h2 className="text-2xl font-heading font-semibold text-foreground mb-6">
-                  Vending Machine Locations
+                  {t.admin.vendingMachineLocations}
                 </h2>
 
                 <div className="grid md:grid-cols-2 gap-8">
@@ -236,12 +238,12 @@ export function AdminPanelPage() {
                   <div className="bg-muted/30 rounded-lg p-8 flex items-center justify-center">
                     <div className="text-center">
                       <MapPinIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="text-xl font-semibold text-foreground mb-2">Interactive Map</h3>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">{t.admin.interactiveMap}</h3>
                       <p className="text-muted-foreground">
-                        Map integration available with Google Maps or Mapbox API
+                        {t.admin.mapIntegration}
                       </p>
                       <p className="text-sm text-muted-foreground mt-2">
-                        {vendingMachineLocations.length} locations across Belgium
+                        {t.admin.locationsCount.replace('{count}', vendingMachineLocations.length.toString())}
                       </p>
                     </div>
                   </div>
@@ -257,7 +259,7 @@ export function AdminPanelPage() {
                   value={selectedMachine || ''}
                   onChange={(e) => setSelectedMachine(e.target.value)}
                 >
-                  <option value="">Select a vending machine</option>
+                  <option value="">{t.admin.selectMachine}</option>
                   {vendingMachineLocations.map((machine) => (
                     <option key={machine.id} value={machine.id}>
                       {machine.name} ({machine.id})
@@ -273,19 +275,19 @@ export function AdminPanelPage() {
                       <thead className="bg-muted">
                         <tr>
                           <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                            Medicine
+                            {t.admin.medicine}
                           </th>
                           <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                            Stock
+                            {t.admin.stock}
                           </th>
                           <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                            Price
+                            {t.admin.price}
                           </th>
                           <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                            Status
+                            {t.admin.status}
                           </th>
                           <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                            Actions
+                            {t.admin.actions}
                           </th>
                         </tr>
                       </thead>
@@ -310,7 +312,7 @@ export function AdminPanelPage() {
                                     <HelpCircleIcon className="w-5 h-5 text-yellow-600" />
                                   )}
                                   <span className={alert === 'critical' ? 'text-red-600 font-semibold' : ''}>
-                                    {item.stock} units
+                                    {item.stock} {t.common.units}
                                   </span>
                                 </div>
                               </td>
@@ -320,17 +322,17 @@ export function AdminPanelPage() {
                               <td className="px-6 py-4 text-sm">
                                 {alert === 'critical' && (
                                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-700">
-                                    Critical
+                                    {t.admin.critical}
                                   </span>
                                 )}
                                 {alert === 'warning' && (
                                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-700">
-                                    Low Stock
+                                    {t.admin.lowStock}
                                   </span>
                                 )}
                                 {alert === 'good' && (
                                   <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-700">
-                                    Good
+                                    {t.admin.good}
                                   </span>
                                 )}
                               </td>
@@ -339,7 +341,7 @@ export function AdminPanelPage() {
                                   onClick={() => restockMachineProduct(selectedMachine, item.medicineId, 50)}
                                   className="h-10 px-4 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90"
                                 >
-                                  Restock to 50
+                                  {t.admin.restock}
                                 </Button>
                               </td>
                             </tr>
@@ -355,7 +357,7 @@ export function AdminPanelPage() {
                 <Card className="p-12 text-center">
                   <PackageIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                   <p className="text-lg text-muted-foreground">
-                    Select a vending machine to view its inventory
+                    {t.admin.selectMachineInventory}
                   </p>
                 </Card>
               )}
@@ -365,9 +367,9 @@ export function AdminPanelPage() {
             <TabsContent value="purchases" className="space-y-4">
               <Card className="overflow-hidden">
                 <div className="p-6 border-b border-border">
-                  <h2 className="text-2xl font-heading font-semibold text-foreground">Purchase History</h2>
+                  <h2 className="text-2xl font-heading font-semibold text-foreground">{t.admin.purchaseHistory}</h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    All transactions across {vendingMachineLocations.length} vending machines
+                    {t.admin.allTransactions.replace('{count}', vendingMachineLocations.length.toString())}
                   </p>
                 </div>
 
@@ -376,22 +378,22 @@ export function AdminPanelPage() {
                     <thead className="bg-muted">
                       <tr>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Transaction ID
+                          {t.admin.transactionId}
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Machine
+                          {t.admin.machine}
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">Date</th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">Items</th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">Total</th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">Status</th>
+                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">{t.admin.date}</th>
+                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">{t.admin.items}</th>
+                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">{t.admin.total}</th>
+                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">{t.admin.status}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {transactions.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
-                            No transactions yet
+                            {t.admin.noTransactions}
                           </td>
                         </tr>
                       ) : (
@@ -411,7 +413,7 @@ export function AdminPanelPage() {
                                 {new Date(transaction.date).toLocaleString()}
                               </td>
                               <td className="px-6 py-4 text-sm text-foreground">
-                                {transaction.medicines.length} item(s)
+                                {transaction.medicines.length} {transaction.medicines.length === 1 ? t.checkout.item : t.checkout.items}
                               </td>
                               <td className="px-6 py-4 text-sm text-foreground font-medium">
                                 ${transaction.total.toFixed(2)}
@@ -426,7 +428,7 @@ export function AdminPanelPage() {
                                       : 'bg-red-500/20 text-red-700'
                                   }`}
                                 >
-                                  {transaction.status}
+                                  {t.admin[transaction.status as keyof typeof t.admin]}
                                 </span>
                               </td>
                             </tr>
@@ -444,10 +446,10 @@ export function AdminPanelPage() {
               <Card className="overflow-hidden">
                 <div className="p-6 border-b border-border">
                   <h2 className="text-2xl font-heading font-semibold text-foreground">
-                    Prescription Management
+                    {t.admin.prescriptionManagement}
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Manage and track prescription fulfillments
+                    {t.admin.managePrescriptions}
                   </p>
                 </div>
 
@@ -456,23 +458,23 @@ export function AdminPanelPage() {
                     <thead className="bg-muted">
                       <tr>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Recipe ID
+                          {t.admin.recipeId}
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Patient
+                          {t.admin.patient}
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Doctor
+                          {t.admin.doctor}
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">Date</th>
+                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">{t.admin.date}</th>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Medications
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Status
+                          {t.admin.medications}
                         </th>
                         <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          Actions
+                          {t.admin.status}
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
+                          {t.admin.actions}
                         </th>
                       </tr>
                     </thead>
@@ -486,7 +488,7 @@ export function AdminPanelPage() {
                             {new Date(recipe.date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 text-sm text-foreground">
-                            {recipe.medications.length} medication(s)
+                            {recipe.medications.length} {recipe.medications.length === 1 ? t.admin.medicine : t.admin.medications}
                           </td>
                           <td className="px-6 py-4 text-sm">
                             <span
@@ -498,7 +500,7 @@ export function AdminPanelPage() {
                                   : 'bg-red-500/20 text-red-700'
                               }`}
                             >
-                              {recipe.status}
+                              {t.admin[recipe.status as keyof typeof t.admin]}
                             </span>
                           </td>
                           <td className="px-6 py-4">
@@ -506,7 +508,7 @@ export function AdminPanelPage() {
                               onClick={() => setSelectedRecipe(recipe.id)}
                               className="h-10 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
                             >
-                              View Details
+                              {t.admin.viewDetails}
                             </Button>
                           </td>
                         </tr>
@@ -518,20 +520,20 @@ export function AdminPanelPage() {
 
               {selectedRecipe && (
                 <Card className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-4">Recipe Details</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">{t.admin.recipeDetails}</h3>
                   {recipes
                     .filter((r) => r.id === selectedRecipe)
                     .map((recipe) => (
                       <div key={recipe.id} className="space-y-4">
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <div className="text-sm text-muted-foreground">Patient Name</div>
+                            <div className="text-sm text-muted-foreground">{t.admin.patientName}</div>
                             <div className="text-base text-foreground font-medium">
                               {recipe.patientName}
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm text-muted-foreground">Doctor Name</div>
+                            <div className="text-sm text-muted-foreground">{t.admin.doctorName}</div>
                             <div className="text-base text-foreground font-medium">
                               {recipe.doctorName}
                             </div>
@@ -539,12 +541,12 @@ export function AdminPanelPage() {
                         </div>
 
                         <div className="border-t border-border pt-4">
-                          <h4 className="text-lg font-semibold text-foreground mb-3">Medications</h4>
+                          <h4 className="text-lg font-semibold text-foreground mb-3">{t.admin.medications}</h4>
                           {recipe.medications.map((med, index) => (
                             <div key={index} className="p-4 bg-muted/30 rounded-lg mb-2">
                               <div className="font-medium text-foreground">{med.medicineName}</div>
                               <div className="text-sm text-muted-foreground mt-1">
-                                Dosage: {med.dosage} | Frequency: {med.frequency} | Duration:{' '}
+                                {t.admin.dosage}: {med.dosage} | {t.admin.frequency}: {med.frequency} | {t.admin.duration}:{' '}
                                 {med.duration}
                               </div>
                             </div>
@@ -553,7 +555,7 @@ export function AdminPanelPage() {
 
                         {recipe.vendingMachineId && (
                           <div className="border-t border-border pt-4">
-                            <div className="text-sm text-muted-foreground">Fulfilled at</div>
+                            <div className="text-sm text-muted-foreground">{t.admin.fulfilledAt}</div>
                             <div className="text-base text-foreground font-medium">
                               {
                                 vendingMachineLocations.find((m) => m.id === recipe.vendingMachineId)

@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Medicine } from '../data/medicines';
 import { ProfessionalPDFViewer } from './ProfessionalPDFViewer';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface MedicineDetailModalProps {
   medicine: Medicine | null;
@@ -26,6 +27,7 @@ interface MedicineDetailModalProps {
 }
 
 export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetailModalProps) {
+  const { t } = useTranslation();
   // PDF viewer state
   const [isPdfViewerOpen, setIsPdfViewerOpen] = useState(false);
 
@@ -97,20 +99,20 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                   {/* Price & Stock */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/20">
-                      <div className="text-xs text-muted-foreground mb-1">Price</div>
+                      <div className="text-xs text-muted-foreground mb-1">{t.medicineDetails.price}</div>
                       <div className="text-2xl font-heading font-bold text-primary">
                         €{medicine.price.toFixed(2)}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        €{medicine.priceWithVat.toFixed(2)} with VAT
+                        €{medicine.priceWithVat.toFixed(2)} {t.medicineDetails.withVat}
                       </div>
                     </div>
                     <div className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border border-accent/20">
-                      <div className="text-xs text-muted-foreground mb-1">Available Stock</div>
+                      <div className="text-xs text-muted-foreground mb-1">{t.medicineDetails.availableStock}</div>
                       <div className="text-2xl font-heading font-bold text-accent">
                         {medicine.stock}
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">units in stock</div>
+                      <div className="text-xs text-muted-foreground mt-1">{t.medicineDetails.unitsInStock}</div>
                     </div>
                   </div>
 
@@ -118,7 +120,7 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                   <div className="mt-6">
                     <h3 className="text-base font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
                       <FileTextIcon className="w-5 h-5 text-primary" />
-                      What is this medicine?
+                      {t.medicineDetails.whatIsThis}
                     </h3>
                     <div className="p-5 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-900">
                       <p className="text-base text-foreground leading-relaxed font-medium">
@@ -131,7 +133,7 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                   <div className="mt-6">
                     <h3 className="text-base font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
                       <PillIcon className="w-5 h-5 text-primary" />
-                      How to Use
+                      {t.medicineDetails.howToUse}
                     </h3>
                     <div className="p-5 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 rounded-xl border border-green-200 dark:border-green-900">
                       <div className="space-y-3">
@@ -140,8 +142,8 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                             <span className="text-white text-xs font-bold">1</span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground mb-1">Read the Instructions</p>
-                            <p className="text-sm text-muted-foreground">Always read the package leaflet before using this medicine.</p>
+                            <p className="text-sm font-medium text-foreground mb-1">{t.medicineDetails.step1Title}</p>
+                            <p className="text-sm text-muted-foreground">{t.medicineDetails.step1Description}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
@@ -149,8 +151,8 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                             <span className="text-white text-xs font-bold">2</span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground mb-1">Follow Dosage</p>
-                            <p className="text-sm text-muted-foreground">Take as directed. Do not exceed the recommended dose of {medicine.strength}.</p>
+                            <p className="text-sm font-medium text-foreground mb-1">{t.medicineDetails.step2Title}</p>
+                            <p className="text-sm text-muted-foreground">{t.medicineDetails.step2Description.replace('{strength}', medicine.strength)}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-3">
@@ -158,7 +160,7 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                             <span className="text-white text-xs font-bold">3</span>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground mb-1">Store Properly</p>
+                            <p className="text-sm font-medium text-foreground mb-1">{t.medicineDetails.step3Title}</p>
                             <p className="text-sm text-muted-foreground">{medicine.storageConditions}</p>
                           </div>
                         </div>
@@ -170,7 +172,7 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                   <div className="mt-6">
                     <h3 className="text-base font-heading font-semibold text-foreground mb-3 flex items-center gap-2">
                       <FlaskConicalIcon className="w-5 h-5 text-primary" />
-                      Active Ingredient
+                      {t.medicineDetails.activeIngredient}
                     </h3>
                     <div className="bg-white dark:bg-neutral-950 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-hidden">
                       <div className="grid grid-cols-2 gap-px bg-neutral-200 dark:bg-neutral-800">
@@ -333,7 +335,7 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                 <div className="px-6 py-4 bg-muted/30 border-t border-border">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-3">
-                      ✓ All medicine information is displayed above
+                      {t.medicineDetails.allInfoDisplayed}
                     </p>
                     {medicine.packageLeafletUrl && (
                       <Button
@@ -343,7 +345,7 @@ export function MedicineDetailModal({ medicine, isOpen, onClose }: MedicineDetai
                         className="inline-flex items-center gap-2"
                       >
                         <FileTextIcon className="w-4 h-4" />
-                        View Package Leaflet (PDF)
+                        {t.medicineDetails.viewPackageLeaflet}
                       </Button>
                     )}
                   </div>

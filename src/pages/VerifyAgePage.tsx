@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '../stores/appStore';
+import { useTranslation } from '../hooks/useTranslation';
 
 type VerificationStatus = 'idle' | 'verifying' | 'verified' | 'failed';
 
 export function VerifyAgePage() {
   const navigate = useNavigate();
   const { setAgeVerified } = useAppStore();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<VerificationStatus>('idle');
   const [progress, setProgress] = useState(0);
   const [showWebcam, setShowWebcam] = useState(false);
@@ -72,10 +74,10 @@ export function VerifyAgePage() {
         >
           <div className="text-center space-y-4">
             <h1 className="text-4xl font-heading font-semibold text-foreground">
-              Age Verification Required
+              {t.ageVerification.title}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Please verify your age to continue with your purchase
+              {t.ageVerification.subtitle}
             </p>
           </div>
 
@@ -84,7 +86,7 @@ export function VerifyAgePage() {
               <div className="space-y-8">
                 <div className="text-center space-y-4">
                   <p className="text-base text-foreground">
-                    Choose a verification method to confirm you are 18 years or older
+                    {t.ageVerification.description}
                   </p>
                 </div>
 
@@ -94,7 +96,7 @@ export function VerifyAgePage() {
                     className="h-32 flex-col gap-4 bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     <CameraIcon className="w-12 h-12" strokeWidth={2} />
-                    <span className="text-lg">Scan ID with CameraIcon</span>
+                    <span className="text-lg">{t.ageVerification.takePhoto}</span>
                   </Button>
 
                   <Button
@@ -102,7 +104,7 @@ export function VerifyAgePage() {
                     className="h-32 flex-col gap-4 bg-secondary text-secondary-foreground hover:bg-secondary/90"
                   >
                     <UploadIcon className="w-12 h-12" strokeWidth={2} />
-                    <span className="text-lg">UploadIcon ID Photo</span>
+                    <span className="text-lg">{t.ageVerification.uploadDocument}</span>
                   </Button>
                 </div>
               </div>
@@ -130,14 +132,14 @@ export function VerifyAgePage() {
                     className="flex-1 h-16 text-lg bg-accent text-accent-foreground hover:bg-accent/90"
                   >
                     <CameraIcon className="w-6 h-6 mr-3" strokeWidth={2} />
-                    Capture Photo
+                    {t.ageVerification.takePhoto}
                   </Button>
 
                   <Button
                     onClick={() => setShowWebcam(false)}
                     className="h-16 px-8 text-lg bg-muted text-muted-foreground hover:bg-muted/80"
                   >
-                    Cancel
+                    {t.common.cancel}
                   </Button>
                 </div>
               </div>
@@ -152,10 +154,10 @@ export function VerifyAgePage() {
                     className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full"
                   />
                   <h3 className="text-2xl font-heading font-medium text-foreground">
-                    Verifying Your ID...
+                    {t.ageVerification.processing}
                   </h3>
                   <p className="text-base text-muted-foreground">
-                    Please wait while we verify your information
+                    {t.ageVerification.processing}
                   </p>
                 </div>
 
@@ -185,7 +187,7 @@ export function VerifyAgePage() {
                     transition={{ delay: 0.3 }}
                     className="text-2xl font-heading font-medium text-foreground"
                   >
-                    ✓ You're Verified!
+                    ✓ {t.ageVerification.verificationSuccess}
                   </motion.h3>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -193,7 +195,7 @@ export function VerifyAgePage() {
                     transition={{ delay: 0.5 }}
                     className="text-base text-muted-foreground"
                   >
-                    Age verification complete. You can now proceed with your purchase.
+                    {t.ageVerification.verificationSuccess}
                   </motion.p>
                 </div>
 
@@ -206,7 +208,7 @@ export function VerifyAgePage() {
                     onClick={handleContinue}
                     className="h-16 px-12 text-lg bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg"
                   >
-                    Continue to Shopping
+                    {t.aiAssistant.continue}
                   </Button>
                 </motion.div>
               </div>
@@ -224,18 +226,18 @@ export function VerifyAgePage() {
 
                 <div className="space-y-3">
                   <h3 className="text-2xl font-heading font-medium text-foreground">
-                    Verification Failed
+                    {t.ageVerification.verificationFailedTitle}
                   </h3>
                   <p className="text-base text-muted-foreground">
-                    We couldn't verify your age. Please try again with a clear, well-lit photo of your ID.
+                    {t.ageVerification.verificationFailedMessage}
                   </p>
                   <div className="bg-muted/50 rounded-lg p-4 text-sm text-left space-y-2">
-                    <p className="font-medium text-foreground">Tips for better results:</p>
+                    <p className="font-medium text-foreground">{t.ageVerification.tipsHeader}</p>
                     <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      <li>Ensure good lighting</li>
-                      <li>Keep ID flat and in focus</li>
-                      <li>Make sure all text is readable</li>
-                      <li>Avoid glare or shadows</li>
+                      <li>{t.ageVerification.tipGoodLighting}</li>
+                      <li>{t.ageVerification.tipKeepFlat}</li>
+                      <li>{t.ageVerification.tipTextReadable}</li>
+                      <li>{t.ageVerification.tipAvoidGlare}</li>
                     </ul>
                   </div>
                 </div>
@@ -244,7 +246,7 @@ export function VerifyAgePage() {
                   onClick={handleRetry}
                   className="h-16 px-12 text-lg bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  Try Again
+                  {t.ageVerification.tryAgain}
                 </Button>
               </div>
             )}

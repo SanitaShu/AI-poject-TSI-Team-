@@ -11,10 +11,12 @@ import { medicines } from '../data/medicines';
 import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
 import { saveTransaction } from '../services/database';
 import { sendPurchaseEmails } from '../services/email';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { selectedMedicines, clearCart, vendingMachineId, processPurchase, addTransaction } = useAppStore();
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -199,10 +201,10 @@ export function CheckoutPage() {
         >
           <div className="text-center">
             <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-              Complete Your Purchase
+              {t.checkout.title}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Pay securely with PayPal
+              {t.checkout.proceedToPayment}
             </p>
           </div>
 
@@ -211,7 +213,7 @@ export function CheckoutPage() {
               <div className="space-y-6">
                 {/* Order Summary */}
                 <div className="bg-muted/50 rounded-xl p-6">
-                  <h3 className="text-lg font-heading font-medium mb-4">Order Summary</h3>
+                  <h3 className="text-lg font-heading font-medium mb-4">{t.checkout.orderSummary}</h3>
                   <div className="space-y-3">
                     {selectedMedicines.map((id) => {
                       const med = medicines.find((m) => m.id === id);
@@ -225,7 +227,7 @@ export function CheckoutPage() {
                     })}
                     <div className="border-t border-border pt-3 mt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-base font-semibold">Total (VAT included)</span>
+                        <span className="text-base font-semibold">{t.checkout.total} ({t.medicineDetails.withVat})</span>
                         <span className="text-xl font-bold text-primary">€{total.toFixed(2)}</span>
                       </div>
                     </div>
@@ -235,7 +237,7 @@ export function CheckoutPage() {
                 {/* Email Input */}
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium text-foreground flex items-center gap-2">
-                    Email Address (Required)
+                    {t.checkout.emailValidation}
                     <span className="text-destructive">*</span>
                   </label>
                   <div className="relative">
@@ -251,7 +253,7 @@ export function CheckoutPage() {
                       }}
                       onBlur={() => {
                         if (email && !validateEmail(email)) {
-                          setEmailError('Please enter a valid email address');
+                          setEmailError(t.checkout.emailValidation);
                         }
                       }}
                       placeholder="your.email@example.com"
@@ -321,10 +323,10 @@ export function CheckoutPage() {
               <div className="space-y-8">
                 <div className="text-center">
                   <h2 className="text-2xl font-heading font-semibold text-foreground mb-4">
-                    Processing Payment...
+                    {t.checkout.processingPayment}
                   </h2>
                   <p className="text-base text-muted-foreground mb-8">
-                    Your medicines are being dispensed
+                    {t.medicineDetails.dispensing}
                   </p>
                 </div>
 
@@ -366,7 +368,7 @@ export function CheckoutPage() {
                     transition={{ delay: 0.3 }}
                     className="text-3xl font-heading font-semibold text-foreground"
                   >
-                    🎉 Purchase Complete!
+                    {t.checkout.paymentSuccess}
                   </motion.h2>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -374,8 +376,7 @@ export function CheckoutPage() {
                     transition={{ delay: 0.5 }}
                     className="text-lg text-muted-foreground"
                   >
-                    Thank you for your purchase. Please collect your medicines from the
-                    dispensing tray below.
+                    {t.checkout.thankYou} {t.checkout.orderConfirmation}
                   </motion.p>
                 </div>
 
@@ -389,7 +390,7 @@ export function CheckoutPage() {
                     onClick={handleComplete}
                     className="h-16 px-12 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                   >
-                    Return to Home
+                    {t.checkout.backToHome}
                   </Button>
                   <Button
                     variant="outline"
@@ -399,12 +400,12 @@ export function CheckoutPage() {
                         await sendReceiptEmail(lastOrderId, email);
                         alert(`Receipt sent to ${email}!`);
                       } else {
-                        alert('Please enter a valid email address first');
+                        alert(t.checkout.emailValidation);
                       }
                     }}
                   >
                     <MailIcon className="w-5 h-5 mr-2" />
-                    {receiptSent ? 'Resend Receipt' : 'Download Receipt'}
+                    {t.checkout.viewReceipt}
                   </Button>
                 </motion.div>
               </div>

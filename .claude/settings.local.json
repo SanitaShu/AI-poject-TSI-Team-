@@ -15,7 +15,8 @@
       "Bash(claude mcp --help:*)",
       "Bash(claude mcp get supabase)",
       "Bash(ngrok http:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(timeout 5 echo:*)"
     ],
     "deny": [],
     "ask": []

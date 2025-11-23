@@ -9,6 +9,7 @@ import { TypingIndicator } from '../components/TypingIndicator';
 import { useAppStore } from '../stores/appStore';
 import { medicineSystemPrompt } from '../utils/medicineSystemPrompt';
 import { voiceRecognition, textToSpeech, isSpeechRecognitionSupported, isTextToSpeechSupported } from '../services/voice';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface Message {
   id: string;
@@ -20,6 +21,7 @@ interface Message {
 export function ChatRecommendationPage() {
   const navigate = useNavigate();
   const { addRecommendedMedicines } = useAppStore();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -290,10 +292,10 @@ export function ChatRecommendationPage() {
         >
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-              AI Health Assistant
+              {t.aiAssistant.title}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Get personalized medicine recommendations based on your symptoms
+              {t.aiAssistant.subtitle}
             </p>
           </div>
 
@@ -310,8 +312,8 @@ export function ChatRecommendationPage() {
                     </motion.div>
                   </div>
                   <div>
-                    <h3 className="font-heading font-medium text-foreground">AI Health Assistant</h3>
-                    <p className="text-xs text-muted-foreground">Always here to help</p>
+                    <h3 className="font-heading font-medium text-foreground">{t.aiAssistant.title}</h3>
+                    <p className="text-xs text-muted-foreground">{t.header.aiAssistant}</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -415,7 +417,7 @@ export function ChatRecommendationPage() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !isListening && handleSend()}
-                  placeholder={isListening ? "Listening..." : "Describe your symptoms..."}
+                  placeholder={isListening ? t.aiAssistant.thinking : t.aiAssistant.placeholder}
                   disabled={isListening}
                   className="flex-1 h-14 px-6 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 />
@@ -458,14 +460,14 @@ export function ChatRecommendationPage() {
                   className="flex-1 h-14 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
                 >
                   <ShoppingBagIcon className="w-5 h-5 mr-3" strokeWidth={2} />
-                  Add Suggested Items
+                  {t.aiAssistant.continue}
                 </Button>
 
                 <Button
                   onClick={() => navigate('/select-medicine')}
                   className="flex-1 h-14 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90"
                 >
-                  View All Medicines
+                  {t.aiAssistant.skip}
                 </Button>
               </div>
             </div>
