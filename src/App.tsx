@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, useLocation } from 'react-router-dom';
+import { HashRouter, useLocation } from 'react-router-dom';
 import { AppRouter } from './components/AppRouter';
 import { useIdleTimer } from './hooks/useIdleTimer';
 import { useNavigate } from 'react-router-dom';
@@ -41,9 +41,9 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppContent />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
