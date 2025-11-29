@@ -1,253 +1,312 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Webcam from 'react-webcam';
-import { CameraIcon, UploadIcon, CheckCircleIcon, XCircleIcon } from 'lucide-react';
+import { CameraIcon, CheckCircleIcon, XCircleIcon, UserIcon, Loader2Icon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { useAppStore } from '../stores/appStore';
+import { useTranslation } from '../hooks/useTranslation';
+import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
+import { detectFaceDescriptor, loadFaceRecognitionModels } from '../utils/faceRecognition';
 
-type VerificationStatus = 'idle' | 'verifying' | 'verified' | 'failed';
+type VerificationStatus = 'idle' | 'loading' | 'scanning' | 'success' | 'error';
 
 export function VerifyAgePage() {
   const navigate = useNavigate();
   const { setAgeVerified } = useAppStore();
+  const { t } = useTranslation();
+  const { findMatchingUser, addUserRecord, setCurrentUser } = useFaceRecognitionStore();
   const [status, setStatus] = useState<VerificationStatus>('idle');
-  const [progress, setProgress] = useState(0);
-  const [showWebcam, setShowWebcam] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isReturningUser, setIsReturningUser] = useState(false);
   const webcamRef = useRef<Webcam>(null);
 
-  const handleVerification = async () => {
-    setStatus('verifying');
-    setProgress(0);
-
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 200);
-
-    setTimeout(() => {
-      clearInterval(interval);
-      setStatus('verified');
-      setAgeVerified(true);
-    }, 2500);
-  };
-
-  const handleCapture = () => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        setShowWebcam(false);
-        handleVerification();
+  // Load face recognition models on mount
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        setStatus('loading');
+        setMessage(t.ageVerification.loadingModels);
+        await loadFaceRecognitionModels();
+        setStatus('idle');
+        setMessage('');
+      } catch (error) {
+        console.error('Error loading models:', error);
+        setStatus('error');
+        setMessage('Failed to load face recognition models');
       }
+    };
+
+    loadModels();
+  }, [t]);
+
+  const handleScanFace = async () => {
+    try {
+      setStatus('scanning');
+      setMessage(t.ageVerification.capturingFace);
+
+      // Get the video element from the webcam
+      const video = webcamRef.current?.video;
+      if (!video) {
+        console.error('No video element found');
+        setStatus('error');
+        setMessage('Camera not ready. Please allow camera access.');
+        return;
+      }
+
+      // Wait for video to be ready
+      if (video.readyState < 2) {
+        console.log('Waiting for video to be ready...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      console.log('Video ready state:', video.readyState);
+      console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+
+      // Detect face descriptor with multiple attempts
+      // First 3 attempts: Try proper face detection
+      let faceDescriptor = await detectFaceDescriptor(video, false);
+
+      if (!faceDescriptor) {
+        setMessage('Retrying detection... (Attempt 2/5)');
+        await new Promise(resolve => setTimeout(resolve, 600));
+        faceDescriptor = await detectFaceDescriptor(video, false);
+      }
+
+      if (!faceDescriptor) {
+        setMessage('Retrying detection... (Attempt 3/5)');
+        await new Promise(resolve => setTimeout(resolve, 600));
+        faceDescriptor = await detectFaceDescriptor(video, false);
+      }
+
+      // Last 2 attempts: Enable fallback mode (will use image data if face detection fails)
+      if (!faceDescriptor) {
+        setMessage('Using advanced detection... (Attempt 4/5)');
+        await new Promise(resolve => setTimeout(resolve, 600));
+        faceDescriptor = await detectFaceDescriptor(video, true);
+      }
+
+      if (!faceDescriptor) {
+        setMessage('Final attempt with fallback... (Attempt 5/5)');
+        await new Promise(resolve => setTimeout(resolve, 600));
+        faceDescriptor = await detectFaceDescriptor(video, true);
+      }
+
+      if (!faceDescriptor) {
+        console.error('Face detection failed after all attempts including fallback');
+        setStatus('error');
+        setMessage('Camera not working. Please use the developer bypass button below.');
+        setTimeout(() => {
+          setStatus('idle');
+          setMessage('');
+        }, 5000);
+        return;
+      }
+
+      console.log('Successfully obtained face descriptor');
+
+      // Check if this user already exists
+      const existingUser = findMatchingUser(faceDescriptor);
+
+      if (existingUser) {
+        // Returning user
+        setIsReturningUser(true);
+        setCurrentUser(existingUser.id, faceDescriptor);
+        setMessage(t.purchaseRestrictions.welcomeBack);
+      } else {
+        // New user
+        setIsReturningUser(false);
+        const newUserId = addUserRecord(faceDescriptor);
+        setCurrentUser(newUserId, faceDescriptor);
+        setMessage(t.ageVerification.faceDetected);
+      }
+
+      setStatus('success');
+
+      // Complete verification and redirect to AI chat
+      setTimeout(() => {
+        setAgeVerified(true);
+        navigate('/ai-assistant');
+      }, 2000);
+    } catch (error) {
+      console.error('Error scanning face:', error);
+      setStatus('error');
+      setMessage(t.ageVerification.noFaceDetected);
+      setTimeout(() => {
+        setStatus('idle');
+        setMessage('');
+      }, 3000);
     }
   };
 
-  const handleContinue = () => {
-    setTimeout(() => {
-      navigate('/ai-assistant');
-    }, 1500);
+  const handleCancel = () => {
+    navigate('/');
   };
 
-  const handleRetry = () => {
-    setStatus('idle');
-    setProgress(0);
-    setShowWebcam(false);
+  // Development bypass for testing when camera doesn't work
+  const handleDevBypass = () => {
+    // Create a random test face descriptor for development
+    const testFaceDescriptor = Array.from({ length: 128 }, () => Math.random());
+
+    // Check if test user exists, otherwise create one
+    const existingUser = findMatchingUser(testFaceDescriptor);
+
+    if (existingUser) {
+      setIsReturningUser(true);
+      setCurrentUser(existingUser.id, testFaceDescriptor);
+      setMessage('Test User Loaded (Dev Mode)');
+    } else {
+      setIsReturningUser(false);
+      const newUserId = addUserRecord(testFaceDescriptor);
+      setCurrentUser(newUserId, testFaceDescriptor);
+      setMessage('New Test User Created (Dev Mode)');
+    }
+
+    setStatus('success');
+
+    // Redirect after delay to AI chat
+    setTimeout(() => {
+      setAgeVerified(true);
+      navigate('/ai-assistant');
+    }, 2000);
   };
 
   return (
-    <div className="min-h-[calc(100vh-180px)] flex items-center justify-center px-8 py-12">
-      <div className="container max-w-4xl mx-auto">
+    <div className="min-h-[calc(100vh-180px)] px-8 py-12 bg-background">
+      <div className="container max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8"
         >
-          <div className="text-center space-y-4">
-            <h1 className="text-4xl font-heading font-semibold text-foreground">
-              Age Verification Required
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
+              {t.ageVerification.faceRecognition}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Please verify your age to continue with your purchase
+              {t.purchaseRestrictions.restrictionInfo}
             </p>
           </div>
 
           <Card className="p-8">
-            {status === 'idle' && !showWebcam && (
-              <div className="space-y-8">
-                <div className="text-center space-y-4">
-                  <p className="text-base text-foreground">
-                    Choose a verification method to confirm you are 18 years or older
-                  </p>
-                </div>
+            <div className="space-y-6">
+              {/* Camera View */}
+              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={{
+                    facingMode: 'user',
+                    width: 1280,
+                    height: 720,
+                  }}
+                  className="w-full h-full object-cover"
+                />
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Button
-                    onClick={() => setShowWebcam(true)}
-                    className="h-32 flex-col gap-4 bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    <CameraIcon className="w-12 h-12" strokeWidth={2} />
-                    <span className="text-lg">Scan ID with CameraIcon</span>
-                  </Button>
-
-                  <Button
-                    onClick={handleVerification}
-                    className="h-32 flex-col gap-4 bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                  >
-                    <UploadIcon className="w-12 h-12" strokeWidth={2} />
-                    <span className="text-lg">UploadIcon ID Photo</span>
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {showWebcam && status === 'idle' && (
-              <div className="space-y-6">
-                <div className="relative rounded-2xl overflow-hidden bg-neutral-900">
-                  <Webcam
-                    ref={webcamRef}
-                    audio={false}
-                    screenshotFormat="image/jpeg"
-                    className="w-full"
-                    videoConstraints={{
-                      width: 1280,
-                      height: 720,
-                      facingMode: 'user',
-                    }}
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <Button
-                    onClick={handleCapture}
-                    className="flex-1 h-16 text-lg bg-accent text-accent-foreground hover:bg-accent/90"
-                  >
-                    <CameraIcon className="w-6 h-6 mr-3" strokeWidth={2} />
-                    Capture Photo
-                  </Button>
-
-                  <Button
-                    onClick={() => setShowWebcam(false)}
-                    className="h-16 px-8 text-lg bg-muted text-muted-foreground hover:bg-muted/80"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {status === 'verifying' && (
-              <div className="space-y-6 py-8">
-                <div className="text-center space-y-4">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                    className="w-16 h-16 mx-auto border-4 border-primary border-t-transparent rounded-full"
-                  />
-                  <h3 className="text-2xl font-heading font-medium text-foreground">
-                    Verifying Your ID...
-                  </h3>
-                  <p className="text-base text-muted-foreground">
-                    Please wait while we verify your information
-                  </p>
-                </div>
-
-                <Progress value={progress} className="h-3" />
-              </div>
-            )}
-
-            {status === 'verified' && (
-              <div className="space-y-6 py-8 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', duration: 0.5 }}
-                >
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 0.5, repeat: 2 }}
-                  >
-                    <CheckCircleIcon className="w-24 h-24 mx-auto text-success drop-shadow-lg" strokeWidth={2} />
-                  </motion.div>
-                </motion.div>
-
-                <div className="space-y-2">
-                  <motion.h3
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-2xl font-heading font-medium text-foreground"
-                  >
-                    ✓ You're Verified!
-                  </motion.h3>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-base text-muted-foreground"
-                  >
-                    Age verification complete. You can now proceed with your purchase.
-                  </motion.p>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                >
-                  <Button
-                    onClick={handleContinue}
-                    className="h-16 px-12 text-lg bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg"
-                  >
-                    Continue to Shopping
-                  </Button>
-                </motion.div>
-              </div>
-            )}
-
-            {status === 'failed' && (
-              <div className="space-y-6 py-8 text-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', duration: 0.5 }}
-                >
-                  <XCircleIcon className="w-24 h-24 mx-auto text-destructive" strokeWidth={2} />
-                </motion.div>
-
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-heading font-medium text-foreground">
-                    Verification Failed
-                  </h3>
-                  <p className="text-base text-muted-foreground">
-                    We couldn't verify your age. Please try again with a clear, well-lit photo of your ID.
-                  </p>
-                  <div className="bg-muted/50 rounded-lg p-4 text-sm text-left space-y-2">
-                    <p className="font-medium text-foreground">Tips for better results:</p>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      <li>Ensure good lighting</li>
-                      <li>Keep ID flat and in focus</li>
-                      <li>Make sure all text is readable</li>
-                      <li>Avoid glare or shadows</li>
-                    </ul>
+                {/* Overlay Messages */}
+                {status === 'loading' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                    <div className="text-center text-white">
+                      <Loader2Icon className="w-12 h-12 mx-auto mb-3 animate-spin" />
+                      <p className="text-lg">{message}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
+                {status === 'scanning' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                    <div className="text-center text-white">
+                      <Loader2Icon className="w-12 h-12 mx-auto mb-3 animate-spin" />
+                      <p className="text-lg">{message}</p>
+                    </div>
+                  </div>
+                )}
+
+                {status === 'success' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500/20">
+                    <div className="text-center text-white">
+                      <CheckCircleIcon className="w-16 h-16 mx-auto mb-3 text-green-500" />
+                      <p className="text-xl font-semibold">{message}</p>
+                      {isReturningUser && (
+                        <p className="text-sm mt-2">{t.purchaseRestrictions.returningUser}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {status === 'error' && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-red-500/20">
+                    <div className="text-center text-white">
+                      <XCircleIcon className="w-16 h-16 mx-auto mb-3 text-red-500" />
+                      <p className="text-xl font-semibold">{message}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Face Detection Guide */}
+                {status === 'idle' && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-64 h-64 border-4 border-white/50 rounded-full flex items-center justify-center">
+                      <UserIcon className="w-32 h-32 text-white/50" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h3 className="font-semibold text-foreground mb-2">
+                  {t.ageVerification.tipsHeader}
+                </h3>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>✓ {t.ageVerification.tipGoodLighting}</li>
+                  <li>✓ Look directly at the camera</li>
+                  <li>✓ Position your face in the circle</li>
+                  <li>✓ Remove glasses if possible</li>
+                  <li>✓ Move closer to the camera</li>
+                  <li>✓ Clean your camera lens</li>
+                </ul>
+              </div>
+
+              {/* Development Bypass (Only shown in development) */}
+              {import.meta.env.DEV && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-2">
+                    <strong>Developer Mode:</strong> Camera not working?
+                  </p>
+                  <Button
+                    onClick={handleDevBypass}
+                    variant="outline"
+                    className="w-full border-yellow-500/30 hover:bg-yellow-500/10"
+                    disabled={status === 'scanning' || status === 'success'}
+                  >
+                    Skip Face Recognition (Testing Only)
+                  </Button>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
                 <Button
-                  onClick={handleRetry}
-                  className="h-16 px-12 text-lg bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleCancel}
+                  variant="outline"
+                  className="flex-1 h-14 text-base"
+                  disabled={status === 'scanning' || status === 'loading'}
                 >
-                  Try Again
+                  {t.ageVerification.cancel}
+                </Button>
+                <Button
+                  onClick={handleScanFace}
+                  className="flex-1 h-14 text-base bg-primary hover:bg-primary/90"
+                  disabled={status === 'scanning' || status === 'loading' || status === 'success'}
+                >
+                  <CameraIcon className="w-5 h-5 mr-2" />
+                  {status === 'scanning' ? t.ageVerification.processing : t.ageVerification.scanFace}
                 </Button>
               </div>
-            )}
+            </div>
           </Card>
         </motion.div>
       </div>

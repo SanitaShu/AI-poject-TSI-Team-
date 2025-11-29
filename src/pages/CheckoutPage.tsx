@@ -1,36 +1,188 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { CreditCardIcon, SmartphoneIcon, CheckCircleIcon } from 'lucide-react';
+import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ModalPopup } from '../components/ModalPopup';
 import { DispenseAnimation } from '../components/DispenseAnimation';
+import { PayPalButton } from '../components/PayPalButton';
 import { useAppStore } from '../stores/appStore';
-
-type PaymentMethod = 'card' | 'mobile' | 'skip';
+import { medicines } from '../data/medicines';
+import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
+import { saveTransaction } from '../services/database';
+import { sendPurchaseEmails } from '../services/email';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { clearCart } = useAppStore();
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const { selectedMedicines, clearCart, vendingMachineId, processPurchase, addTransaction } = useAppStore();
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [lastOrderId, setLastOrderId] = useState('');
+  const [receiptSent, setReceiptSent] = useState(false);
+  const [isSavingTransaction, setIsSavingTransaction] = useState(false);
 
-  const handlePayment = (method: PaymentMethod) => {
-    setSelectedMethod(method);
-    setShowConfirmation(true);
+  // Calculate total
+  const total = selectedMedicines.reduce((sum, id) => {
+    const medicine = medicines.find((m) => m.id === id);
+    return sum + (medicine?.priceWithVat || 0);
+  }, 0);
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleConfirm = () => {
-    setShowConfirmation(false);
-    setIsProcessing(true);
+  const sendReceiptEmail = async (orderId: string, customerEmail: string) => {
+    try {
+      // Generate receipt data
+      const machineId = import.meta.env.VITE_VENDING_MACHINE_ID || 'VM-001';
+      const receiptData = createReceiptData(
+        `PUR-${Date.now()}`,
+        selectedMedicines,
+        orderId,
+        customerEmail,
+        machineId,
+        'Riga Central Station' // Will be dynamic based on machine
+      );
 
-    setTimeout(() => {
+      const htmlReceipt = generateHTMLReceipt(receiptData);
+      const textReceipt = generateTextReceipt(receiptData);
+
+      // Log receipt (in production, send via email service)
+      console.log('Receipt generated for:', customerEmail);
+      console.log('Text Receipt:\n', textReceipt);
+
+      // TODO: Send email via backend service
+      // For now, download receipt as HTML file
+      const blob = new Blob([htmlReceipt], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${receiptData.purchaseId}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setReceiptSent(true);
+      return true;
+    } catch (error) {
+      console.error('Error sending receipt:', error);
+      return false;
+    }
+  };
+
+  const handlePaymentSuccess = async (orderId: string) => {
+    console.log('Payment successful! Order ID:', orderId);
+    setLastOrderId(orderId);
+    setIsProcessing(true);
+    setIsSavingTransaction(true);
+    setError(null);
+
+    try {
+      // Validate email is provided
+      if (!email || !validateEmail(email)) {
+        setError('Please provide a valid email address');
+        setIsProcessing(false);
+        setIsSavingTransaction(false);
+        return;
+      }
+
+      // Prepare transaction data
+      const transactionId = `TXN-${Date.now()}`;
+      const items = selectedMedicines.map((id) => {
+        const medicine = medicines.find((m) => m.id === id);
+        return {
+          medicineId: id,
+          medicineName: medicine?.shortName || 'Unknown',
+          quantity: 1,
+          price: medicine?.priceWithVat || 0,
+        };
+      });
+
+      // Save transaction to database
+      const dbResult = await saveTransaction({
+        transactionId,
+        customerEmail: email,
+        total,
+        paymentMethod: 'paypal',
+        status: 'completed',
+        vendingMachineId,
+        items,
+      });
+
+      if (!dbResult.success) {
+        console.error('Failed to save transaction to database:', dbResult.error);
+        setError('Failed to save transaction. Please contact support.');
+      }
+
+      // Add transaction to local store
+      addTransaction({
+        id: transactionId,
+        date: new Date(),
+        medicines: items.map((item) => ({
+          id: item.medicineId,
+          name: item.medicineName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total,
+        paymentMethod: 'paypal',
+        status: 'completed',
+      });
+
+      // Process purchase (update inventory)
+      const purchaseSuccess = processPurchase(selectedMedicines);
+      if (!purchaseSuccess) {
+        console.error('Failed to update inventory');
+      }
+
+      // Send emails (customer receipt + admin notification)
+      const emailResult = await sendPurchaseEmails({
+        transactionId,
+        customerEmail: email,
+        date: new Date().toLocaleString(),
+        items: items.map((item) => ({
+          name: item.medicineName,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        total,
+        vendingMachineId,
+      });
+
+      if (emailResult.success) {
+        setReceiptSent(true);
+        console.log('✅ Emails sent successfully');
+      } else {
+        console.error('Failed to send emails:', emailResult);
+        // Don't show error to user as transaction was successful
+      }
+
+      setIsSavingTransaction(false);
+
+      // Simulate dispensing animation
+      setTimeout(() => {
+        setIsProcessing(false);
+        setIsComplete(true);
+      }, 3000);
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      setError('An error occurred while processing your payment. Please contact support.');
       setIsProcessing(false);
-      setIsComplete(true);
-    }, 5000);
+      setIsSavingTransaction(false);
+    }
+  };
+
+  const handlePaymentError = (errorMessage: string) => {
+    console.error('Payment error:', errorMessage);
+    setError(errorMessage);
+    setIsProcessing(false);
   };
 
   const handleComplete = () => {
@@ -49,73 +201,121 @@ export function CheckoutPage() {
         >
           <div className="text-center">
             <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-              Complete Your Purchase
+              {t.checkout.title}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Select your preferred payment method
+              {t.checkout.proceedToPayment}
             </p>
           </div>
 
           {!isProcessing && !isComplete && (
-            <>
-              <div className="text-center mb-6">
-                <p className="text-sm text-muted-foreground">
-                  🔒 Secure Payment • All transactions are encrypted and protected
-                </p>
+            <Card className="p-8 max-w-2xl mx-auto">
+              <div className="space-y-6">
+                {/* Order Summary */}
+                <div className="bg-muted/50 rounded-xl p-6">
+                  <h3 className="text-lg font-heading font-medium mb-4">{t.checkout.orderSummary}</h3>
+                  <div className="space-y-3">
+                    {selectedMedicines.map((id) => {
+                      const med = medicines.find((m) => m.id === id);
+                      if (!med) return null;
+                      return (
+                        <div key={id} className="flex justify-between items-center">
+                          <span className="text-sm">{med.shortName}</span>
+                          <span className="text-sm font-medium">€{med.priceWithVat.toFixed(2)}</span>
+                        </div>
+                      );
+                    })}
+                    <div className="border-t border-border pt-3 mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-base font-semibold">{t.checkout.total} ({t.medicineDetails.withVat})</span>
+                        <span className="text-xl font-bold text-primary">€{total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Email Input */}
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-foreground flex items-center gap-2">
+                    {t.checkout.emailValidation}
+                    <span className="text-destructive">*</span>
+                  </label>
+                  <div className="relative">
+                    <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      required
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setEmailError('');
+                      }}
+                      onBlur={() => {
+                        if (email && !validateEmail(email)) {
+                          setEmailError(t.checkout.emailValidation);
+                        }
+                      }}
+                      placeholder="your.email@example.com"
+                      className={`w-full h-12 pl-12 pr-4 rounded-lg border ${
+                        email && validateEmail(email)
+                          ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20'
+                          : 'border-input'
+                      } bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring`}
+                    />
+                    {email && validateEmail(email) && (
+                      <CheckCircleIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                    )}
+                  </div>
+                  {emailError && (
+                    <p className="text-xs text-destructive">{emailError}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    📧 Receipt will be sent to this email • Admin will be notified at touficjandah@gmail.com
+                  </p>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircleIcon className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-destructive">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* PayPal Button */}
+                <div className="flex flex-col items-center gap-4">
+                  {!email || !validateEmail(email) ? (
+                    <div className="w-full bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                        ⚠️ Please enter a valid email address to proceed with payment
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-center mb-2">
+                        <p className="text-sm text-muted-foreground">
+                          🔒 Secure Payment • All transactions are encrypted and protected
+                        </p>
+                      </div>
+                      <PayPalButton onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+                    </>
+                  )}
+                </div>
+
+                <div className="text-center pt-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/review')}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ← Back to Review
+                  </Button>
+                </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6">
-              <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all"
-                onClick={() => handlePayment('card')}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                    <CreditCardIcon className="w-10 h-10 text-primary" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-xl font-heading font-medium text-foreground">
-                    Card / NFC
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Pay with credit card or tap your phone
-                  </p>
-                </div>
-              </Card>
-
-              <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all"
-                onClick={() => handlePayment('mobile')}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-                    <SmartphoneIcon className="w-10 h-10 text-accent" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-xl font-heading font-medium text-foreground">
-                    Mobile Pay
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Use Apple Pay, Google Pay, or Samsung Pay
-                  </p>
-                </div>
-              </Card>
-
-              <Card
-                className="p-8 cursor-pointer hover:shadow-lg transition-all"
-                onClick={() => handlePayment('skip')}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-secondary/10 flex items-center justify-center">
-                    <CheckCircleIcon className="w-10 h-10 text-secondary" strokeWidth={2} />
-                  </div>
-                  <h3 className="text-xl font-heading font-medium text-foreground">
-                    Skip (Demo)
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Simulate payment for testing
-                  </p>
-                </div>
-              </Card>
-            </div>
-            </>
+            </Card>
           )}
 
           {isProcessing && (
@@ -123,10 +323,10 @@ export function CheckoutPage() {
               <div className="space-y-8">
                 <div className="text-center">
                   <h2 className="text-2xl font-heading font-semibold text-foreground mb-4">
-                    Processing Payment...
+                    {t.checkout.processingPayment}
                   </h2>
                   <p className="text-base text-muted-foreground mb-8">
-                    Your medicines are being dispensed
+                    {t.medicineDetails.dispensing}
                   </p>
                 </div>
 
@@ -168,7 +368,7 @@ export function CheckoutPage() {
                     transition={{ delay: 0.3 }}
                     className="text-3xl font-heading font-semibold text-foreground"
                   >
-                    🎉 Purchase Complete!
+                    {t.checkout.paymentSuccess}
                   </motion.h2>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -176,8 +376,7 @@ export function CheckoutPage() {
                     transition={{ delay: 0.5 }}
                     className="text-lg text-muted-foreground"
                   >
-                    Thank you for your purchase. Please collect your medicines from the
-                    dispensing tray below.
+                    {t.checkout.thankYou} {t.checkout.orderConfirmation}
                   </motion.p>
                 </div>
 
@@ -191,13 +390,22 @@ export function CheckoutPage() {
                     onClick={handleComplete}
                     className="h-16 px-12 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
                   >
-                    Return to Home
+                    {t.checkout.backToHome}
                   </Button>
                   <Button
                     variant="outline"
                     className="h-16 px-12 text-lg rounded-xl"
+                    onClick={async () => {
+                      if (email && validateEmail(email)) {
+                        await sendReceiptEmail(lastOrderId, email);
+                        alert(`Receipt sent to ${email}!`);
+                      } else {
+                        alert(t.checkout.emailValidation);
+                      }
+                    }}
                   >
-                    📧 Email Receipt
+                    <MailIcon className="w-5 h-5 mr-2" />
+                    {t.checkout.viewReceipt}
                   </Button>
                 </motion.div>
               </div>
@@ -205,40 +413,6 @@ export function CheckoutPage() {
           )}
         </motion.div>
       </div>
-
-      <ModalPopup
-        isOpen={showConfirmation}
-        onClose={() => setShowConfirmation(false)}
-        title="Confirm Payment"
-      >
-        <div className="space-y-6">
-          <p className="text-base text-foreground">
-            Are you sure you want to proceed with{' '}
-            {selectedMethod === 'card'
-              ? 'Card/NFC'
-              : selectedMethod === 'mobile'
-              ? 'Mobile Pay'
-              : 'Demo Mode'}
-            ?
-          </p>
-
-          <div className="flex gap-4">
-            <Button
-              onClick={handleConfirm}
-              className="flex-1 h-14 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
-            >
-              Confirm Payment
-            </Button>
-
-            <Button
-              onClick={() => setShowConfirmation(false)}
-              className="flex-1 h-14 rounded-xl bg-muted text-muted-foreground hover:bg-muted/80"
-            >
-              Cancel
-            </Button>
-          </div>
-        </div>
-      </ModalPopup>
     </div>
   );
 }

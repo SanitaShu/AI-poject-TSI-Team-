@@ -6,9 +6,24 @@
       "Bash(timeout 5 npm run dev:*)",
       "Bash(npm install:*)",
       "Bash(pkill:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(test:*)",
+      "Bash(node generate-fake-data.js:*)",
+      "Bash(where claude:*)",
+      "Bash(claude mcp list:*)",
+      "Bash(claude mcp call:*)",
+      "Bash(claude mcp --help:*)",
+      "Bash(claude mcp get supabase)",
+      "Bash(ngrok http:*)",
+      "Bash(node -e:*)",
+      "Bash(timeout 5 echo:*)",
+      "Bash(curl:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

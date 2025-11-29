@@ -6,10 +6,12 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '../stores/appStore';
 import { medicines } from '../data/medicines';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function ReviewAndCheckoutPage() {
   const navigate = useNavigate();
   const { selectedMedicines, toggleMedicine } = useAppStore();
+  const { t } = useTranslation();
 
   const selectedMedicineDetails = medicines.filter((med) =>
     selectedMedicines.includes(med.id)
@@ -29,16 +31,16 @@ export function ReviewAndCheckoutPage() {
         <Card className="p-12 text-center max-w-2xl">
           <ShoppingBagIcon className="w-24 h-24 mx-auto mb-6 text-muted-foreground" strokeWidth={1} />
           <h2 className="text-3xl font-heading font-semibold text-foreground mb-4">
-            Your cart is empty
+            {t.checkout.emptyCart}
           </h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Add some medicines to your cart to continue
+            {t.checkout.emptyCartMessage}
           </p>
           <Button
             onClick={() => navigate('/select-medicine')}
             className="h-14 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Browse Medicines
+            {t.checkout.browseMedicines}
           </Button>
         </Card>
       </div>
@@ -56,10 +58,10 @@ export function ReviewAndCheckoutPage() {
         >
           <div className="text-center">
             <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-              Review Your Order
+              {t.checkout.reviewOrder}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Check your selected medicines before proceeding to payment
+              {t.checkout.checkSelected}
             </p>
           </div>
 
@@ -76,7 +78,7 @@ export function ReviewAndCheckoutPage() {
                           {medicine.name}
                         </h3>
                         <span className="px-2 py-1 rounded text-xs font-medium bg-primary/10 text-primary">
-                          Group {medicine.group}
+                          {t.checkout.groupLabel.replace('{group}', medicine.group.toString())}
                         </span>
                       </div>
                       <p className="text-sm text-muted-foreground mb-3">
@@ -101,24 +103,24 @@ export function ReviewAndCheckoutPage() {
             <div className="lg:col-span-1">
               <Card className="p-8 sticky top-24 shadow-lg">
                 <h2 className="text-2xl font-heading font-semibold text-foreground mb-6">
-                  Order Summary
+                  {t.checkout.orderSummary}
                 </h2>
 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-base">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t.checkout.subtotal}</span>
                     <span className="text-foreground font-normal">${subtotal.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between text-base">
-                    <span className="text-muted-foreground">Tax (8%)</span>
+                    <span className="text-muted-foreground">{t.checkout.tax}</span>
                     <span className="text-foreground font-normal">${tax.toFixed(2)}</span>
                   </div>
 
                   <Separator />
 
                   <div className="flex justify-between text-xl">
-                    <span className="font-heading font-semibold text-foreground">Total</span>
+                    <span className="font-heading font-semibold text-foreground">{t.checkout.total}</span>
                     <span className="font-heading font-semibold text-primary">
                       ${total.toFixed(2)}
                     </span>
@@ -129,14 +131,14 @@ export function ReviewAndCheckoutPage() {
                   onClick={handleCheckout}
                   className="w-full h-14 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
                 >
-                  Proceed to Checkout
+                  {t.checkout.proceedToCheckout}
                 </Button>
 
                 <Button
                   onClick={() => navigate('/select-medicine')}
                   className="w-full h-14 rounded-xl mt-4 bg-muted text-muted-foreground hover:bg-muted/80"
                 >
-                  Add More Items
+                  {t.checkout.addMoreItems}
                 </Button>
               </Card>
             </div>

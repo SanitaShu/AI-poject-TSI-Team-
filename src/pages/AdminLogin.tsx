@@ -5,19 +5,21 @@ import { LockIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAppStore } from '../stores/appStore';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function AdminLogin() {
   const navigate = useNavigate();
   const { setAdmin } = useAppStore();
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = () => {
     if (password === 'admin123') {
       setAdmin(true);
-      navigate('/admin');
+      navigate('/admin/dashboard');
     } else {
-      setError('Invalid password');
+      setError(t.adminLogin.invalidPassword);
     }
   };
 
@@ -35,17 +37,17 @@ export function AdminLogin() {
               <LockIcon className="w-8 h-8 text-secondary" strokeWidth={2} />
             </div>
             <h1 className="text-3xl font-heading font-semibold text-foreground mb-2">
-              Admin Login
+              {t.adminLogin.title}
             </h1>
             <p className="text-base text-muted-foreground">
-              Enter your password to access the admin panel
+              {t.adminLogin.subtitle}
             </p>
           </div>
 
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-normal text-foreground mb-2">
-                Password
+                {t.adminLogin.password}
               </label>
               <input
                 type="password"
@@ -55,7 +57,7 @@ export function AdminLogin() {
                   setError('');
                 }}
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                placeholder="Enter admin password"
+                placeholder={t.adminLogin.enterPassword}
                 className="w-full h-14 px-6 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
               {error && <p className="text-sm text-destructive mt-2">{error}</p>}
@@ -65,14 +67,14 @@ export function AdminLogin() {
               onClick={handleLogin}
               className="w-full h-14 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90"
             >
-              Login
+              {t.adminLogin.login}
             </Button>
 
             <Button
               onClick={() => navigate('/')}
               className="w-full h-14 rounded-xl bg-muted text-muted-foreground hover:bg-muted/80"
             >
-              Back to Home
+              {t.adminLogin.backToHome}
             </Button>
           </div>
         </Card>

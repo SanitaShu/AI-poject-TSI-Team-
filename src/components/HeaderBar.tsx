@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { BotIcon, HomeIcon, ShieldCheckIcon, ShieldAlertIcon, GlobeIcon } from 'lucide-react';
 import { useAppStore } from '../stores/appStore';
+import { useLanguageStore } from '../stores/languageStore';
+import { useTranslation } from '../hooks/useTranslation';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -14,6 +16,8 @@ import { Button } from '@/components/ui/button';
 export function HeaderBar() {
   const location = useLocation();
   const { isAgeVerified, isAdmin } = useAppStore();
+  const { t } = useTranslation();
+  const { toggleLanguage, language } = useLanguageStore();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -26,7 +30,7 @@ export function HeaderBar() {
               <BotIcon className="w-6 h-6 text-primary-foreground" strokeWidth={2} />
             </div>
             <h1 className="text-2xl font-heading font-semibold text-foreground">
-              Smart Medicine Vending
+              {t.header.title}
             </h1>
           </Link>
 
@@ -41,7 +45,7 @@ export function HeaderBar() {
                       }`}
                     >
                       <HomeIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                      Home
+                      {t.header.home}
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
@@ -54,7 +58,7 @@ export function HeaderBar() {
                       }`}
                     >
                       <BotIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                      AI Assistant
+                      {t.header.aiAssistant}
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
@@ -67,7 +71,7 @@ export function HeaderBar() {
                           isActive('/admin-login') ? 'bg-accent/10 text-accent' : 'text-foreground'
                         }`}
                       >
-                        Admin Login
+                        {t.adminLogin.title}
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
@@ -80,20 +84,22 @@ export function HeaderBar() {
               size="icon"
               className="h-12 w-12 rounded-lg"
               title="Change Language"
+              onClick={toggleLanguage}
             >
               <GlobeIcon className="w-5 h-5" strokeWidth={2} />
+              <span className="ml-1 text-xs font-semibold">{language.toUpperCase()}</span>
             </Button>
 
             <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-card border border-border shadow-sm">
               {isAgeVerified ? (
                 <>
                   <ShieldCheckIcon className="w-5 h-5 text-success" strokeWidth={2} />
-                  <span className="text-sm font-normal text-success">Age Verified</span>
+                  <span className="text-sm font-normal text-success">{t.header.ageVerified}</span>
                 </>
               ) : (
                 <>
                   <ShieldAlertIcon className="w-5 h-5 text-warning" strokeWidth={2} />
-                  <span className="text-sm font-normal text-warning">Not Verified</span>
+                  <span className="text-sm font-normal text-warning">{t.header.notVerified}</span>
                 </>
               )}
             </div>
