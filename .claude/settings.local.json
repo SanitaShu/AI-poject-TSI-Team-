@@ -18,7 +18,8 @@
       "Bash(node -e:*)",
       "Bash(timeout 5 echo:*)",
       "Bash(curl:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "WebFetch(domain:sanitashu.github.io)"
     ],
     "deny": [],
     "ask": []
