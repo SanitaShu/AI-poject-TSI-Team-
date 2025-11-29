@@ -31,6 +31,18 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+          VITE_PAYPAL_CLIENT_ID: ${{ secrets.VITE_PAYPAL_CLIENT_ID }}
+          VITE_PAYPAL_MODE: sandbox
+          VITE_VENDING_MACHINE_ID: VM-001
+          VITE_DEFAULT_STOCK_QUANTITY: 30
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.VITE_EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID_CUSTOMER: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_CUSTOMER }}
+          VITE_EMAILJS_TEMPLATE_ID_ADMIN: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_ADMIN }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
         run: npm run build
 
       - name: Setup Pages
