@@ -1,4 +1,4 @@
-# AI-Driven Optimization of OTC Medicine Vending Machines in Latvia
+# AI-Driven OTC Medicine Vending Machines in Latvia
 ## Overview
 Course: Data Analytics & AI
 Project Duration: 13.10.2025 → 18.12.2025
