@@ -19,7 +19,9 @@
       "Bash(timeout 5 echo:*)",
       "Bash(curl:*)",
       "Bash(timeout:*)",
-      "WebFetch(domain:sanitashu.github.io)"
+      "WebFetch(domain:sanitashu.github.io)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

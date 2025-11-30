@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DispenseAnimation } from '../components/DispenseAnimation';
 import { PayPalButton } from '../components/PayPalButton';
+import { PayPalCardPayment } from '../components/PayPalCardPayment';
 import { useAppStore } from '../stores/appStore';
 import { medicines } from '../data/medicines';
 import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
@@ -285,7 +286,7 @@ export function CheckoutPage() {
                   </div>
                 )}
 
-                {/* PayPal Button */}
+                {/* Payment Section */}
                 <div className="flex flex-col items-center gap-4">
                   {!email || !validateEmail(email) ? (
                     <div className="w-full bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
@@ -300,6 +301,20 @@ export function CheckoutPage() {
                           🔒 Secure Payment • All transactions are encrypted and protected
                         </p>
                       </div>
+
+                      {/* Card Payment Form */}
+                      <div className="w-full">
+                        <PayPalCardPayment onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
+                      </div>
+
+                      {/* OR Divider */}
+                      <div className="w-full flex items-center gap-4 my-4">
+                        <div className="flex-1 border-t border-border"></div>
+                        <span className="text-sm text-muted-foreground">OR</span>
+                        <div className="flex-1 border-t border-border"></div>
+                      </div>
+
+                      {/* PayPal Button */}
                       <PayPalButton onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
                     </>
                   )}
