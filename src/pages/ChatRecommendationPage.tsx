@@ -206,7 +206,7 @@ export function ChatRecommendationPage() {
       console.log('API Key status:', apiKey ? 'Present' : 'Missing');
       console.log('Environment check:', import.meta.env.MODE);
 
-      if (!apiKey) {
+      if (!apiKey || apiKey.trim() === '') {
         throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
       }
 
@@ -214,7 +214,7 @@ export function ChatRecommendationPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey.trim()}`,
         },
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',

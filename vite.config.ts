@@ -7,7 +7,7 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   publicDir: "./public",
-  base: "/",
+  base: "/AI-poject-TSI-Team-/",
   css: {
     postcss: {
       plugins: [tailwind()],
