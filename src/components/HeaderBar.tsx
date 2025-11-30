@@ -62,20 +62,6 @@ export function HeaderBar() {
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
-
-                {!isAdmin && (
-                  <NavigationMenuItem>
-                    <Link to="/admin-login">
-                      <NavigationMenuLink
-                        className={`group inline-flex h-12 w-max items-center justify-center rounded-lg px-6 py-3 text-base font-normal transition-colors hover:bg-accent/10 focus:bg-accent/10 focus:outline-none disabled:pointer-events-none disabled:opacity-50 ${
-                          isActive('/admin-login') ? 'bg-accent/10 text-accent' : 'text-foreground'
-                        }`}
-                      >
-                        {t.adminLogin.title}
-                      </NavigationMenuLink>
-                    </Link>
-                  </NavigationMenuItem>
-                )}
               </NavigationMenuList>
             </NavigationMenu>
 
