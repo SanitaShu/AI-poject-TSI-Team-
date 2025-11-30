@@ -41,7 +41,7 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter basename="/AI-poject-TSI-Team-">
+    <BrowserRouter>
       <AppContent />
     </BrowserRouter>
   );
