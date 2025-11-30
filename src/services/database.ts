@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export interface TransactionData {
   transactionId: string;
@@ -25,6 +25,11 @@ export interface InventoryUpdate {
  * Save a transaction to the database
  */
 export async function saveTransaction(data: TransactionData) {
+  if (!isSupabaseConfigured) {
+    console.warn('⚠️ Supabase not configured - transaction not saved to database');
+    return { success: true, transaction: null, warning: 'Database disabled' };
+  }
+
   try {
     // Insert transaction
     const { data: transaction, error: transactionError } = await supabase
@@ -74,6 +79,11 @@ export async function saveTransaction(data: TransactionData) {
  * Update inventory stock in the database
  */
 export async function updateInventory(updates: InventoryUpdate[]) {
+  if (!isSupabaseConfigured) {
+    console.warn('⚠️ Supabase not configured - inventory not updated in database');
+    return { success: true, warning: 'Database disabled' };
+  }
+
   try {
     const promises = updates.map(async (update) => {
       // Check if inventory item exists
