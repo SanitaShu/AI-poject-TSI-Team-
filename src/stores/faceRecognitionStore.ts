@@ -28,6 +28,7 @@ interface FaceRecognitionState {
   getBlockedCategories: (userId: string) => number[];
   checkCategoryAvailable: (userId: string, categoryId: number) => boolean;
   clearCurrentUser: () => void;
+  cleanupExpiredData: () => void;
 }
 
 // Calculate Euclidean distance between two face descriptors
@@ -156,6 +157,29 @@ export const useFaceRecognitionStore = create<FaceRecognitionState>()(
           currentUserFaceDescriptor: null,
           blockedCategories: [],
         });
+      },
+
+      cleanupExpiredData: () => {
+        const now = Date.now();
+
+        set((state) => ({
+          userRecords: state.userRecords
+            .map((record) => ({
+              ...record,
+              // Remove purchase history older than 24 hours
+              purchaseHistory: record.purchaseHistory.filter(
+                (purchase) => now - purchase.purchaseDate < HOURS_24_IN_MS
+              ),
+            }))
+            // Remove user records with no recent purchases (older than 24 hours)
+            .filter((record) => {
+              // Keep records with recent purchases or created in the last 24 hours
+              return (
+                record.purchaseHistory.length > 0 ||
+                now - record.lastPurchaseDate < HOURS_24_IN_MS
+              );
+            }),
+        }));
       },
     }),
     {

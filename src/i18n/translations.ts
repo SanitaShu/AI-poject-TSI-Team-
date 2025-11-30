@@ -52,6 +52,25 @@ export const translations = {
       scanFace: 'Scan Face',
     },
 
+    // Face Recognition Consent
+    faceConsent: {
+      title: 'Face Recognition Consent',
+      purpose: 'To continue, this system will temporarily store your facial recognition data solely for the purpose of preventing excessive medication purchases within a 24-hour period. This is a safety measure to ensure responsible use.',
+      whatWeStore: 'What we store:',
+      facePhoto: 'A photo or encrypted facial representation',
+      timestamp: 'Timestamp of purchase attempt',
+      storageDuration: 'Storage duration:',
+      duration24h: 'Your data will be automatically deleted after 24 hours.',
+      notIdentified: 'You will NOT be personally identified. We only track purchase frequency, not your identity.',
+      noThirdParty: 'Your data will not be shared with third parties.',
+      confirmationTitle: 'By selecting "I Agree", you confirm that:',
+      understandUsage: 'You understand how your facial data will be used',
+      consentStorage: 'You consent to temporary storage for up to 24 hours',
+      canWithdraw: 'You may withdraw at any time by choosing "Cancel"',
+      agree: 'I Agree',
+      cancel: 'Cancel',
+    },
+
     // Purchase Restrictions
     purchaseRestrictions: {
       welcomeBack: 'Welcome back!',
@@ -360,6 +379,25 @@ export const translations = {
       noFaceDetected: 'Seja nav noteikta. Lūdzu, skatieties kamerā.',
       loadingModels: 'Ielādē sejas atpazīšanas modeļus...',
       scanFace: 'Skenēt Seju',
+    },
+
+    // Face Recognition Consent
+    faceConsent: {
+      title: 'Sejas Atpazīšanas Piekrišana',
+      purpose: 'Lai turpinātu, šī sistēma īslaicīgi uzglabās jūsu sejas atpazīšanas datus tikai un vienīgi, lai novērstu pārmērīgu medikamentu iegādi 24 stundu laikā. Tas ir drošības pasākums, lai nodrošinātu atbildīgu lietošanu.',
+      whatWeStore: 'Ko mēs uzglabājam:',
+      facePhoto: 'Fotogrāfiju vai šifrētu sejas attēlojumu',
+      timestamp: 'Pirkuma mēģinājuma laika zīmogu',
+      storageDuration: 'Uzglabāšanas ilgums:',
+      duration24h: 'Jūsu dati tiks automātiski izdzēsti pēc 24 stundām.',
+      notIdentified: 'Jūs NETIKS personīgi identificēts. Mēs izsekojam tikai pirkumu biežumu, nevis jūsu identitāti.',
+      noThirdParty: 'Jūsu dati netiks kopīgoti ar trešajām personām.',
+      confirmationTitle: 'Izvēloties "Es piekrītu", jūs apstipriniet, ka:',
+      understandUsage: 'Jūs saprotat, kā tiks izmantoti jūsu sejas dati',
+      consentStorage: 'Jūs piekrītat īslaicīgai uzglabāšanai līdz 24 stundām',
+      canWithdraw: 'Jūs varat atteikties jebkurā laikā, izvēloties "Atcelt"',
+      agree: 'Es Piekrītu',
+      cancel: 'Atcelt',
     },
 
     // Purchase Restrictions

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
@@ -8,6 +8,7 @@ import { DispenseAnimation } from '../components/DispenseAnimation';
 import { PayPalButton } from '../components/PayPalButton';
 import { PayPalCardPayment } from '../components/PayPalCardPayment';
 import { useAppStore } from '../stores/appStore';
+import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
 import { medicines } from '../data/medicines';
 import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
 import { saveTransaction } from '../services/database';
@@ -17,6 +18,7 @@ import { useTranslation } from '../hooks/useTranslation';
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { selectedMedicines, clearCart, vendingMachineId, processPurchase, addTransaction } = useAppStore();
+  const { cleanupExpiredData } = useFaceRecognitionStore();
   const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -26,6 +28,11 @@ export function CheckoutPage() {
   const [lastOrderId, setLastOrderId] = useState('');
   const [receiptSent, setReceiptSent] = useState(false);
   const [isSavingTransaction, setIsSavingTransaction] = useState(false);
+
+  // Cleanup expired face recognition data when component mounts
+  useEffect(() => {
+    cleanupExpiredData();
+  }, [cleanupExpiredData]);
 
   // Calculate total
   const total = selectedMedicines.reduce((sum, id) => {
@@ -166,6 +173,9 @@ export function CheckoutPage() {
       }
 
       setIsSavingTransaction(false);
+
+      // Cleanup expired face recognition data after successful payment
+      cleanupExpiredData();
 
       // Simulate dispensing animation
       setTimeout(() => {

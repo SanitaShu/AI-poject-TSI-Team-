@@ -9,6 +9,7 @@ import { useAppStore } from '../stores/appStore';
 import { useTranslation } from '../hooks/useTranslation';
 import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
 import { detectFaceDescriptor, loadFaceRecognitionModels } from '../utils/faceRecognition';
+import { FaceRecognitionConsent } from '../components/FaceRecognitionConsent';
 
 type VerificationStatus = 'idle' | 'loading' | 'scanning' | 'success' | 'error';
 
@@ -20,6 +21,8 @@ export function VerifyAgePage() {
   const [status, setStatus] = useState<VerificationStatus>('idle');
   const [message, setMessage] = useState('');
   const [isReturningUser, setIsReturningUser] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
+  const [hasConsented, setHasConsented] = useState(false);
   const webcamRef = useRef<Webcam>(null);
 
   // Load face recognition models on mount
@@ -42,6 +45,12 @@ export function VerifyAgePage() {
   }, [t]);
 
   const handleScanFace = async () => {
+    // Show consent modal if user hasn't consented yet
+    if (!hasConsented) {
+      setShowConsent(true);
+      return;
+    }
+
     try {
       setStatus('scanning');
       setMessage(t.ageVerification.capturingFace);
@@ -144,6 +153,20 @@ export function VerifyAgePage() {
     navigate('/');
   };
 
+  const handleConsentAgree = () => {
+    setHasConsented(true);
+    setShowConsent(false);
+    // Automatically trigger face scan after consent
+    setTimeout(() => {
+      handleScanFace();
+    }, 300);
+  };
+
+  const handleConsentCancel = () => {
+    setShowConsent(false);
+    navigate('/');
+  };
+
   // Development bypass for testing when camera doesn't work
   const handleDevBypass = () => {
     // Create a random test face descriptor for development
@@ -173,9 +196,16 @@ export function VerifyAgePage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-180px)] px-8 py-12 bg-background">
-      <div className="container max-w-2xl mx-auto">
-        <motion.div
+    <>
+      <FaceRecognitionConsent
+        isOpen={showConsent}
+        onAgree={handleConsentAgree}
+        onCancel={handleConsentCancel}
+      />
+
+      <div className="min-h-[calc(100vh-180px)] px-8 py-12 bg-background">
+        <div className="container max-w-2xl mx-auto">
+          <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -307,9 +337,10 @@ export function VerifyAgePage() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </motion.div>
+            </Card>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
