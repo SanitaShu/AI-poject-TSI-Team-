@@ -26,6 +26,13 @@ export function CheckoutPage() {
   // Cleanup expired face recognition data when component mounts
   useEffect(() => {
     cleanupExpiredData();
+    // Set page title
+    document.title = 'Checkout – Smart Medicine Vending';
+
+    // Cleanup function to reset title when leaving page
+    return () => {
+      document.title = 'Smart Medicine Vending';
+    };
   }, [cleanupExpiredData]);
 
   // Calculate total

@@ -46,12 +46,20 @@ export function ChatRecommendationPage() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Log voice support on mount
+  // Log voice support on mount and set page title
   useEffect(() => {
+    // Set page title
+    document.title = 'AI Assistant – Smart Medicine Vending';
+
     console.log('🎤 Voice Features Status:');
     console.log('  Speech Recognition:', isSpeechRecognitionSupported() ? '✅ Supported' : '❌ Not Supported');
     console.log('  Text-to-Speech:', isTextToSpeechSupported() ? '✅ Supported' : '❌ Not Supported');
     console.log('  Browser:', navigator.userAgent);
+
+    // Cleanup function to reset title when leaving page
+    return () => {
+      document.title = 'Smart Medicine Vending';
+    };
   }, []);
 
   // Voice input handlers
