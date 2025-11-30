@@ -23,7 +23,9 @@
       "Bash(npm run build:*)",
       "Bash(cat:*)",
       "Bash(gh secret list:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
