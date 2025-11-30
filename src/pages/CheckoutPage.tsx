@@ -5,12 +5,10 @@ import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DispenseAnimation } from '../components/DispenseAnimation';
-import { PayPalButton } from '../components/PayPalButton';
-import { PayPalCardPayment } from '../components/PayPalCardPayment';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { useAppStore } from '../stores/appStore';
 import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
 import { medicines } from '../data/medicines';
-import { createReceiptData, generateHTMLReceipt, generateTextReceipt } from '../utils/receiptGenerator';
 import { saveTransaction } from '../services/database';
 import { sendPurchaseEmails } from '../services/email';
 import { useTranslation } from '../hooks/useTranslation';
@@ -24,10 +22,6 @@ export function CheckoutPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [lastOrderId, setLastOrderId] = useState('');
-  const [receiptSent, setReceiptSent] = useState(false);
-  const [isSavingTransaction, setIsSavingTransaction] = useState(false);
 
   // Cleanup expired face recognition data when component mounts
   useEffect(() => {
@@ -45,51 +39,9 @@ export function CheckoutPage() {
     return emailRegex.test(email);
   };
 
-  const sendReceiptEmail = async (orderId: string, customerEmail: string) => {
-    try {
-      // Generate receipt data
-      const machineId = import.meta.env.VITE_VENDING_MACHINE_ID || 'VM-001';
-      const receiptData = createReceiptData(
-        `PUR-${Date.now()}`,
-        selectedMedicines,
-        orderId,
-        customerEmail,
-        machineId,
-        'Riga Central Station' // Will be dynamic based on machine
-      );
-
-      const htmlReceipt = generateHTMLReceipt(receiptData);
-      const textReceipt = generateTextReceipt(receiptData);
-
-      // Log receipt (in production, send via email service)
-      console.log('Receipt generated for:', customerEmail);
-      console.log('Text Receipt:\n', textReceipt);
-
-      // TODO: Send email via backend service
-      // For now, download receipt as HTML file
-      const blob = new Blob([htmlReceipt], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `receipt-${receiptData.purchaseId}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      setReceiptSent(true);
-      return true;
-    } catch (error) {
-      console.error('Error sending receipt:', error);
-      return false;
-    }
-  };
-
   const handlePaymentSuccess = async (orderId: string) => {
     console.log('Payment successful! Order ID:', orderId);
-    setLastOrderId(orderId);
     setIsProcessing(true);
-    setIsSavingTransaction(true);
     setError(null);
 
     try {
@@ -97,7 +49,6 @@ export function CheckoutPage() {
       if (!email || !validateEmail(email)) {
         setError('Please provide a valid email address');
         setIsProcessing(false);
-        setIsSavingTransaction(false);
         return;
       }
 
@@ -126,7 +77,6 @@ export function CheckoutPage() {
 
       if (!dbResult.success) {
         console.error('Failed to save transaction to database:', dbResult.error);
-        setError('Failed to save transaction. Please contact support.');
       }
 
       // Add transaction to local store
@@ -145,10 +95,7 @@ export function CheckoutPage() {
       });
 
       // Process purchase (update inventory)
-      const purchaseSuccess = processPurchase(selectedMedicines);
-      if (!purchaseSuccess) {
-        console.error('Failed to update inventory');
-      }
+      processPurchase(selectedMedicines);
 
       // Send emails (customer receipt + admin notification)
       const emailResult = await sendPurchaseEmails({
@@ -165,14 +112,8 @@ export function CheckoutPage() {
       });
 
       if (emailResult.success) {
-        setReceiptSent(true);
         console.log('✅ Emails sent successfully');
-      } else {
-        console.error('Failed to send emails:', emailResult);
-        // Don't show error to user as transaction was successful
       }
-
-      setIsSavingTransaction(false);
 
       // Cleanup expired face recognition data after successful payment
       cleanupExpiredData();
@@ -186,14 +127,7 @@ export function CheckoutPage() {
       console.error('Error processing payment:', error);
       setError('An error occurred while processing your payment. Please contact support.');
       setIsProcessing(false);
-      setIsSavingTransaction(false);
     }
-  };
-
-  const handlePaymentError = (errorMessage: string) => {
-    console.error('Payment error:', errorMessage);
-    setError(errorMessage);
-    setIsProcessing(false);
   };
 
   const handleComplete = () => {
@@ -201,45 +135,76 @@ export function CheckoutPage() {
     navigate('/');
   };
 
+  // Get PayPal configuration from environment variables
+  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
+  const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox'; // Default to sandbox for safety
+
+  // Log PayPal configuration for debugging
+  console.log('🔧 PayPal Configuration:');
+  console.log('  Client ID:', paypalClientId ? `✅ ${paypalClientId}` : '❌ Missing');
+  console.log('  Mode Variable:', paypalMode);
+  console.log('  Expected Environment:', paypalMode === 'sandbox' ? '🧪 SANDBOX (Test Cards Work)' : '🔴 LIVE (Real Cards Only)');
+  console.log('');
+  console.log('⚠️ IMPORTANT: Check Network tab for PayPal SDK URL:');
+  console.log('  ✅ Sandbox: https://www.sandbox.paypal.com/sdk/js...');
+  console.log('  ❌ Live: https://www.paypal.com/sdk/js...');
+
+  // Check if Client ID appears to be from sandbox (sandbox IDs are typically shorter)
+  const isSandboxClientId = paypalClientId && (
+    paypalClientId.startsWith('AW') ||
+    paypalClientId.startsWith('Ab') ||
+    paypalClientId.length < 100 // Sandbox IDs are usually shorter than live IDs
+  );
+  console.log('  Client ID Type:', isSandboxClientId ? '🧪 Appears to be SANDBOX' : '⚠️ Might be LIVE');
+
   return (
-    <div className="min-h-[calc(100vh-180px)] px-8 py-12">
-      <div className="container max-w-4xl mx-auto">
+    <div className="min-h-[calc(100vh-180px)] px-4 sm:px-8 py-12">
+      <div className="container max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="space-y-8"
+          className="space-y-6"
         >
+          {/* Header */}
           <div className="text-center">
-            <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
-              {t.checkout.title}
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Review & Checkout
             </h1>
-            <p className="text-lg text-muted-foreground">
-              {t.checkout.proceedToPayment}
+            <p className="text-base text-gray-600 dark:text-gray-400">
+              Proceed to Payment
             </p>
           </div>
 
           {!isProcessing && !isComplete && (
-            <Card className="p-8 max-w-2xl mx-auto">
+            <Card className="bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700 rounded-2xl p-6 sm:p-8">
               <div className="space-y-6">
                 {/* Order Summary */}
-                <div className="bg-muted/50 rounded-xl p-6">
-                  <h3 className="text-lg font-heading font-medium mb-4">{t.checkout.orderSummary}</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Order Summary
+                  </h3>
                   <div className="space-y-3">
                     {selectedMedicines.map((id) => {
                       const med = medicines.find((m) => m.id === id);
                       if (!med) return null;
                       return (
-                        <div key={id} className="flex justify-between items-center">
-                          <span className="text-sm">{med.shortName}</span>
-                          <span className="text-sm font-medium">€{med.priceWithVat.toFixed(2)}</span>
+                        <div key={id} className="flex justify-between items-center text-sm">
+                          <span className="text-gray-700 dark:text-gray-300">{med.shortName}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            €{med.priceWithVat.toFixed(2)}
+                          </span>
                         </div>
                       );
                     })}
-                    <div className="border-t border-border pt-3 mt-3">
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-base font-semibold">{t.checkout.total} ({t.medicineDetails.withVat})</span>
-                        <span className="text-xl font-bold text-primary">€{total.toFixed(2)}</span>
+                        <span className="text-base font-semibold text-gray-900 dark:text-white">
+                          Total (with VAT)
+                        </span>
+                        <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                          €{total.toFixed(2)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -247,94 +212,128 @@ export function CheckoutPage() {
 
                 {/* Email Input */}
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium text-foreground flex items-center gap-2">
-                    {t.checkout.emailValidation}
-                    <span className="text-destructive">*</span>
+                  <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                    Please provide a valid email address
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <MailIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <MailIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       id="email"
                       type="email"
                       value={email}
-                      required
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setEmailError('');
-                      }}
-                      onBlur={() => {
-                        if (email && !validateEmail(email)) {
-                          setEmailError(t.checkout.emailValidation);
-                        }
-                      }}
-                      placeholder="your.email@example.com"
-                      className={`w-full h-12 pl-12 pr-4 rounded-lg border ${
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="poweroftaj@gmail.com"
+                      className={`w-full h-12 pl-11 pr-12 rounded-lg border ${
                         email && validateEmail(email)
-                          ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20'
-                          : 'border-input'
-                      } bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring`}
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900'
+                      } text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors`}
                     />
                     {email && validateEmail(email) && (
-                      <CheckCircleIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                      <CheckCircleIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                     )}
                   </div>
-                  {emailError && (
-                    <p className="text-xs text-destructive">{emailError}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     📧 Receipt will be sent to this email • Admin will be notified at touficjandah@gmail.com
                   </p>
                 </div>
 
                 {/* Error Message */}
                 {error && (
-                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-start gap-3">
-                    <AlertCircleIcon className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-destructive">{error}</p>
-                    </div>
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm font-medium text-red-600 dark:text-red-400">{error}</p>
                   </div>
                 )}
 
-                {/* Payment Section */}
-                <div className="flex flex-col items-center gap-4">
-                  {!email || !validateEmail(email) ? (
-                    <div className="w-full bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
-                      <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
-                        ⚠️ Please enter a valid email address to proceed with payment
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-center mb-2">
-                        <p className="text-sm text-muted-foreground">
-                          🔒 Secure Payment • All transactions are encrypted and protected
-                        </p>
-                      </div>
-
-                      {/* Card Payment Form */}
-                      <div className="w-full">
-                        <PayPalCardPayment onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
-                      </div>
-
-                      {/* OR Divider */}
-                      <div className="w-full flex items-center gap-4 my-4">
-                        <div className="flex-1 border-t border-border"></div>
-                        <span className="text-sm text-muted-foreground">OR</span>
-                        <div className="flex-1 border-t border-border"></div>
-                      </div>
-
-                      {/* PayPal Button */}
-                      <PayPalButton onSuccess={handlePaymentSuccess} onError={handlePaymentError} />
-                    </>
-                  )}
+                {/* Secure Payment Notice */}
+                <div className="text-center py-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    🔒 Secure Payment • All transactions are encrypted and protected
+                  </p>
                 </div>
 
-                <div className="text-center pt-4">
+                {/* PayPal Buttons */}
+                {!email || !validateEmail(email) ? (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                      ⚠️ Please enter a valid email address to proceed with payment
+                    </p>
+                  </div>
+                ) : !paypalClientId ? (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
+                    <p className="text-sm text-red-800 dark:text-red-200 font-medium">
+                      ⚠️ Payment system is not configured. Please contact the administrator.
+                    </p>
+                  </div>
+                ) : (
+                  <PayPalScriptProvider
+                    options={{
+                      clientId: paypalClientId,
+                      currency: 'EUR',
+                      intent: 'capture',
+                      // CRITICAL: Enable sandbox mode and vault for card payments
+                      vault: paypalMode === 'sandbox' ? false : true,
+                      dataClientToken: undefined,
+                      // Add buyer-country to help with sandbox testing
+                      'buyer-country': 'US',
+                      // Explicitly set sandbox environment
+                      ...(paypalMode === 'sandbox' && {
+                        'data-sdk-integration-source': 'developer-studio',
+                      }),
+                    }}
+                  >
+                    <div className="space-y-2">
+                      <PayPalButtons
+                        style={{
+                          layout: 'vertical',
+                          color: 'blue',
+                          shape: 'rect',
+                          label: 'paypal',
+                          height: 48,
+                        }}
+                        fundingSource={undefined}
+                        createOrder={(data, actions) => {
+                          return actions.order.create({
+                            intent: 'CAPTURE',
+                            purchase_units: [
+                              {
+                                amount: {
+                                  currency_code: 'EUR',
+                                  value: total.toFixed(2),
+                                },
+                              },
+                            ],
+                          });
+                        }}
+                        onApprove={async (data, actions) => {
+                          const order = await actions.order?.capture();
+                          if (order?.status === 'COMPLETED') {
+                            handlePaymentSuccess(order.id);
+                          }
+                        }}
+                        onError={(err) => {
+                          console.error('PayPal Error:', err);
+                          setError('Payment was cancelled.');
+                        }}
+                        onCancel={() => {
+                          setError('Payment was cancelled.');
+                        }}
+                      />
+                      <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                        Powered by <span className="font-semibold">PayPal</span>
+                      </p>
+                    </div>
+                  </PayPalScriptProvider>
+                )}
+
+                {/* Back Button */}
+                <div className="text-center pt-2">
                   <Button
                     variant="ghost"
                     onClick={() => navigate('/review')}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   >
                     ← Back to Review
                   </Button>
@@ -347,92 +346,34 @@ export function CheckoutPage() {
             <Card className="p-12">
               <div className="space-y-8">
                 <div className="text-center">
-                  <h2 className="text-2xl font-heading font-semibold text-foreground mb-4">
-                    {t.checkout.processingPayment}
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+                    Processing Payment...
                   </h2>
-                  <p className="text-base text-muted-foreground mb-8">
-                    {t.medicineDetails.dispensing}
+                  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+                    Please wait while we dispense your medicine
                   </p>
                 </div>
-
                 <DispenseAnimation />
               </div>
             </Card>
           )}
 
           {isComplete && (
-            <Card className="p-12 relative overflow-hidden">
-              <motion.div
-                initial={{ scale: 0, rotate: 0 }}
-                animate={{ scale: 50, rotate: 360 }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                className="absolute inset-0 bg-gradient-to-br from-success/20 to-transparent pointer-events-none"
-              />
-              
-              <div className="text-center space-y-6 relative z-10">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', duration: 0.5 }}
+            <Card className="p-12">
+              <div className="text-center space-y-6">
+                <CheckCircleIcon className="w-24 h-24 mx-auto text-green-500" strokeWidth={2} />
+                <h2 className="text-3xl font-semibold text-gray-900 dark:text-white">
+                  Payment Successful!
+                </h2>
+                <p className="text-lg text-gray-600 dark:text-gray-400">
+                  Thank you for your purchase
+                </p>
+                <Button
+                  onClick={handleComplete}
+                  className="h-14 px-12 text-lg rounded-xl bg-blue-600 text-white hover:bg-blue-700"
                 >
-                  <motion.div
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0]
-                    }}
-                    transition={{ duration: 0.5, repeat: 3 }}
-                  >
-                    <CheckCircleIcon className="w-32 h-32 mx-auto text-success drop-shadow-2xl" strokeWidth={2} />
-                  </motion.div>
-                </motion.div>
-
-                <div className="space-y-3">
-                  <motion.h2
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-3xl font-heading font-semibold text-foreground"
-                  >
-                    {t.checkout.paymentSuccess}
-                  </motion.h2>
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="text-lg text-muted-foreground"
-                  >
-                    {t.checkout.thankYou} {t.checkout.orderConfirmation}
-                  </motion.p>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 }}
-                  className="flex flex-col sm:flex-row gap-4 justify-center"
-                >
-                  <Button
-                    onClick={handleComplete}
-                    className="h-16 px-12 text-lg rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
-                  >
-                    {t.checkout.backToHome}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-16 px-12 text-lg rounded-xl"
-                    onClick={async () => {
-                      if (email && validateEmail(email)) {
-                        await sendReceiptEmail(lastOrderId, email);
-                        alert(`Receipt sent to ${email}!`);
-                      } else {
-                        alert(t.checkout.emailValidation);
-                      }
-                    }}
-                  >
-                    <MailIcon className="w-5 h-5 mr-2" />
-                    {t.checkout.viewReceipt}
-                  </Button>
-                </motion.div>
+                  Back to Home
+                </Button>
               </div>
             </Card>
           )}
