@@ -22,7 +22,8 @@
       "WebFetch(domain:sanitashu.github.io)",
       "Bash(npm run build:*)",
       "Bash(cat:*)",
-      "Bash(gh secret list:*)"
+      "Bash(gh secret list:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
