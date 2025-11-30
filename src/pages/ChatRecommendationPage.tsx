@@ -195,8 +195,11 @@ export function ChatRecommendationPage() {
     try {
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
+      console.log('API Key status:', apiKey ? 'Present' : 'Missing');
+      console.log('Environment check:', import.meta.env.MODE);
+
       if (!apiKey) {
-        throw new Error('OpenAI API key not configured');
+        throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
       }
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {

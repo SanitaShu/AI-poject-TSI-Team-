@@ -10,9 +10,11 @@
 export async function speakWithOpenAI(text: string): Promise<void> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
 
+  console.log('TTS API Key status:', apiKey ? 'Present' : 'Missing');
+
   if (!apiKey) {
-    console.error('OpenAI API key not configured');
-    throw new Error('OpenAI API key required for TTS');
+    console.error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
+    throw new Error('OpenAI API key required for TTS. Please configure VITE_OPENAI_API_KEY.');
   }
 
   try {
