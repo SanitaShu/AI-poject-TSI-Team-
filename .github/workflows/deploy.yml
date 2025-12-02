@@ -1,0 +1,113 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify environment variables
+        run: |
+          echo "Checking environment variables..."
+          if [ -z "$VITE_OPENAI_API_KEY" ]; then
+            echo "⚠️  WARNING: VITE_OPENAI_API_KEY is not set!"
+            echo "⚠️  The app will build but OpenAI features won't work"
+            echo "⚠️  Add it to: Settings → Secrets → Actions → New repository secret"
+          else
+            echo "✓ VITE_OPENAI_API_KEY is set"
+          fi
+          if [ -z "$VITE_SUPABASE_URL" ]; then
+            echo "⚠️  WARNING: VITE_SUPABASE_URL is not set!"
+            echo "⚠️  Database features may not work"
+          else
+            echo "✓ VITE_SUPABASE_URL is set"
+          fi
+          echo "Continuing with build..."
+        env:
+          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+
+      - name: Build
+        env:
+          VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
+          VITE_PAYPAL_CLIENT_ID: ${{ secrets.VITE_PAYPAL_CLIENT_ID }}
+          VITE_PAYPAL_MODE: sandbox
+          VITE_VENDING_MACHINE_ID: VM-001
+          VITE_DEFAULT_STOCK_QUANTITY: 30
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_EMAILJS_SERVICE_ID: ${{ secrets.VITE_EMAILJS_SERVICE_ID }}
+          VITE_EMAILJS_TEMPLATE_ID_CUSTOMER: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_CUSTOMER }}
+          VITE_EMAILJS_TEMPLATE_ID_ADMIN: ${{ secrets.VITE_EMAILJS_TEMPLATE_ID_ADMIN }}
+          VITE_EMAILJS_PUBLIC_KEY: ${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          echo "Checking build output..."
+          if [ ! -d "dist" ]; then
+            echo "ERROR: dist directory not found!"
+            exit 1
+          fi
+          echo "✓ dist directory exists"
+
+          if [ ! -f "dist/index.html" ]; then
+            echo "ERROR: dist/index.html not found!"
+            exit 1
+          fi
+          echo "✓ index.html exists"
+
+          echo "Build output contents:"
+          ls -lah dist/
+
+          echo "Checking for JavaScript files..."
+          find dist -name "*.js" -type f | head -5
+
+      - name: Prepare GitHub Pages files
+        run: |
+          cp 404.html dist/404.html
+          touch dist/.nojekyll
+          echo "GitHub Pages files prepared"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
