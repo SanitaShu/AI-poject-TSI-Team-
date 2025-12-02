@@ -164,26 +164,40 @@ export function CheckoutPage() {
   );
   console.log('  Client ID Type:', isSandboxClientId ? '🧪 Appears to be SANDBOX' : '⚠️ Might be LIVE');
 
+  // Wrap the entire component in PayPalScriptProvider to avoid re-initialization
   return (
-    <div className="min-h-[calc(100vh-180px)] px-4 sm:px-8 py-12">
-      <div className="container max-w-2xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6"
-        >
-          {/* Header */}
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              Review & Checkout
-            </h1>
-            <p className="text-base text-gray-600 dark:text-gray-400">
-              Proceed to Payment
-            </p>
-          </div>
+    <PayPalScriptProvider
+      options={{
+        clientId: paypalClientId || 'test',
+        currency: 'EUR',
+        intent: 'capture',
+        vault: paypalMode === 'sandbox' ? false : true,
+        dataClientToken: undefined,
+        'buyer-country': 'LV',
+        ...(paypalMode === 'sandbox' && {
+          'data-sdk-integration-source': 'developer-studio',
+        }),
+      }}
+    >
+      <div className="min-h-[calc(100vh-180px)] px-4 sm:px-8 py-12">
+        <div className="container max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            {/* Header */}
+            <div className="text-center">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                Review & Checkout
+              </h1>
+              <p className="text-base text-gray-600 dark:text-gray-400">
+                Proceed to Payment
+              </p>
+            </div>
 
-          {!isProcessing && !isComplete && (
+            {!isProcessing && !isComplete && (
             <Card className="bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700 rounded-2xl p-6 sm:p-8">
               <div className="space-y-6">
                 {/* Order Summary */}
@@ -275,64 +289,47 @@ export function CheckoutPage() {
                     </p>
                   </div>
                 ) : (
-                  <PayPalScriptProvider
-                    options={{
-                      clientId: paypalClientId,
-                      currency: 'EUR',
-                      intent: 'capture',
-                      // CRITICAL: Enable sandbox mode and vault for card payments
-                      vault: paypalMode === 'sandbox' ? false : true,
-                      dataClientToken: undefined,
-                      // Add buyer-country to help with sandbox testing
-                      'buyer-country': 'US',
-                      // Explicitly set sandbox environment
-                      ...(paypalMode === 'sandbox' && {
-                        'data-sdk-integration-source': 'developer-studio',
-                      }),
-                    }}
-                  >
-                    <div className="space-y-2">
-                      <PayPalButtons
-                        style={{
-                          layout: 'vertical',
-                          color: 'blue',
-                          shape: 'rect',
-                          label: 'paypal',
-                          height: 48,
-                        }}
-                        fundingSource={undefined}
-                        createOrder={(data, actions) => {
-                          return actions.order.create({
-                            intent: 'CAPTURE',
-                            purchase_units: [
-                              {
-                                amount: {
-                                  currency_code: 'EUR',
-                                  value: total.toFixed(2),
-                                },
+                  <div className="space-y-2">
+                    <PayPalButtons
+                      style={{
+                        layout: 'vertical',
+                        color: 'blue',
+                        shape: 'rect',
+                        label: 'paypal',
+                        height: 48,
+                      }}
+                      fundingSource={undefined}
+                      createOrder={(data, actions) => {
+                        return actions.order.create({
+                          intent: 'CAPTURE',
+                          purchase_units: [
+                            {
+                              amount: {
+                                currency_code: 'EUR',
+                                value: total.toFixed(2),
                               },
-                            ],
-                          });
-                        }}
-                        onApprove={async (data, actions) => {
-                          const order = await actions.order?.capture();
-                          if (order?.status === 'COMPLETED') {
-                            handlePaymentSuccess(order.id);
-                          }
-                        }}
-                        onError={(err) => {
-                          console.error('PayPal Error:', err);
-                          setError('Payment was cancelled.');
-                        }}
-                        onCancel={() => {
-                          setError('Payment was cancelled.');
-                        }}
-                      />
-                      <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                        Powered by <span className="font-semibold">PayPal</span>
-                      </p>
-                    </div>
-                  </PayPalScriptProvider>
+                            },
+                          ],
+                        });
+                      }}
+                      onApprove={async (data, actions) => {
+                        const order = await actions.order?.capture();
+                        if (order?.status === 'COMPLETED') {
+                          handlePaymentSuccess(order.id);
+                        }
+                      }}
+                      onError={(err) => {
+                        console.error('PayPal Error:', err);
+                        setError('Payment was cancelled.');
+                      }}
+                      onCancel={() => {
+                        setError('Payment was cancelled.');
+                      }}
+                    />
+                    <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                      Powered by <span className="font-semibold">PayPal</span>
+                    </p>
+                  </div>
                 )}
 
                 {/* Back Button */}
@@ -387,5 +384,6 @@ export function CheckoutPage() {
         </motion.div>
       </div>
     </div>
+    </PayPalScriptProvider>
   );
 }
