@@ -32,6 +32,79 @@ The goal is to improve **healthcare accessibility**, **reduce medicine waste**, 
 - ⚙️ **Data-Driven Management:** Implements the **Data-Driven Scrum (DDS)** framework to enable measurable progress and continuous improvement.
 
 ---
+## **Data Engineer – Data Sourcing, Cleaning & Preparation (Vita's Part)**
+This describes the process of collecting, cleaning, and preparing datasets used for the analysis of OTC medicines, pharmacy distribution, and population statistics in Latvia. Data was obtained from official open data sources, including the State Agency of Medicines and the Central Statistical Bureau of Latvia. The resulting datasets form the foundation for further analysis and visualization in the team’s joint project.
+
+Step 1: Licensed Pharmacies and 24/7 Availability
+Data source: Open Data of the LPC Register – ZVA
+   - 	Dataset includes all licensed pharmaceutical companies and pharmacies in Latvia.
+   - 	Columns contain pharmacy name, address, license status, and geographic coordinates etc.
+   - 	CSV file imported into Google Colab: /content/fdu_register.csv.
+   - 	Unicode characters removed from headers.
+   - 	24-hour pharmacies identified using the Pharmacy Map of Latvia https://dati.zva.gov.lv/aptieku-karte/?type_24h=1 
+   - 	9 pharmacies were found to operate 24/7 in Latvia
+
+**Observation:  Out of 818 total pharmacies, only 9 operate 24/7 — four in Riga and one in each of the other statistical regions.**
+
+Step 2: Population Statistics by Region and Municipality
+Data source: CSP – IRS031 https://data.stat.gov.lv/pxweb/en/OSP_PUB/START__POP__IR__IRS/IRS031/ 
+   - Official demographic data by region, city, and municipality (2012–2025).
+   - Missing values in the value column were removed.
+Cleaned dataset saved as Population Statistics by Region and Municipality.csv.
+
+**Use: to compare population distribution with pharmacy locations and regional accessibility.**
+
+Step 3: Population by Age and Gender
+Data source: CSP – IRD041 https://data.stat.gov.lv/pxweb/en/OSP_PUB/START__POP__IR__IRD/IRD041/ 
+    -	Contains population counts by region, municipality, age group, gender, and year.
+    -	Loaded and cleaned by removing rows with missing values.
+Cleaned dataset saved as Population by Age Groups.csv.
+
+**Use: Helps analyze demographic structure and connect age specific population data to OTC medicine demand. Medicine for adults and children.**
+
+Step 4: Urban and Rural Population
+Data source: CSP – IRD070 https://data.stat.gov.lv/pxweb/en/OSP_PUB/START__POP__IR__IRD/IRD070 
+   - Annual data on Latvia’s urban and rural population (1935–2025).
+   - Rows with missing value entries removed.
+Cleaned dataset saved as Urban and Rural Population.csv.
+
+**Use: Supports analysis of long-term urbanization trends and rural population accessibility to pharmacies and demand changes.**
+
+Step 5: OTC Medicines Register
+Data source: ZVA – List of All Medicines https://dati.zva.gov.lv/zalu-registrs/export/ 
+   - Each product includes authorization numbers and package leaflet URLs
+   - Authentic prices from Latvia State Agency of Medicines
+   - XML register with 39,254 medicines registered in Latvia.
+   - Filtered for legal_status = “bez receptes” (non-prescription).
+   - Result: 2,494 OTC medicines, of which 2,099 belong to selected ATC categories (A, N, M, R, D).
+
+Saved as otc_filtered_A_N_M_R_D_with_prices.csv
+Cleaned dataset saved as otc_selection_150_popular.csv
+
+Use: Choose 50 products, description for is_approved_for_kids “1” , 0 – no
+Metadata https://dati.zva.gov.lv/zalu-registrs/faq/export “package_leaflet “ Link to how to use medication information (PDF, Word or other format)
+
+**For this project 50 random medicines were selected and used otc_selection_50_balanced_v3.2.csv** 
+
+Step 6: OTC Medicine Classification
+Based on the Anatomical Therapeutic Chemical (ATC) classification system (https://www.who.int/tools/atc-ddd-toolkit/atc-classification).
+The project focuses on five OTC therapeutic categories:
+
+- A	ALIMENTARY TRACT AND METABOLISM
+- N	NERVOUS SYSTEM
+- M	MUSCULO-SKELETAL SYSTEM
+- R	RESPIRATORY SYSTEM
+- D	DERMATOLOGICALS
+
+**Rationale: Consumers are not expected to understand ATC codes; categories must be intuitive and compliant with WHO guidelines.**
+
+For the user interface of OTC vending machines, categories should be presented in clear, consumer-friendly language, not as ATC codes. Digestive / Oral care / Anti-inflammatory / Cold / Cough / Allergy / Dermatology / Antiseptic
+
+Regulatory considerations on artificial intelligence for health https://www.who.int/publications/i/item/9789240078871 
+
+This ensures that all analytical components, visualizations, and UI logic were based on accurate information essential for the OTC medicine and population accessibility 
+
+---
 
 ## **🚀 Development Status - Vending Machine Interface (Toufic's Part)**
 
