@@ -12,10 +12,14 @@ export async function speakWithOpenAI(text: string): Promise<void> {
 
   console.log('TTS API Key status:', apiKey ? 'Present' : 'Missing');
 
-  if (!apiKey) {
+  // Validate API key before using it
+  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
     console.error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
     throw new Error('OpenAI API key required for TTS. Please configure VITE_OPENAI_API_KEY.');
   }
+
+  // Clean the API key - remove any whitespace or newlines
+  const cleanApiKey = apiKey.replace(/\s+/g, '');
 
   try {
     console.log('🔊 Using OpenAI TTS...');
@@ -23,7 +27,7 @@ export async function speakWithOpenAI(text: string): Promise<void> {
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${cleanApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

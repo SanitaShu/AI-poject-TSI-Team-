@@ -206,15 +206,19 @@ export function ChatRecommendationPage() {
       console.log('API Key status:', apiKey ? 'Present' : 'Missing');
       console.log('Environment check:', import.meta.env.MODE);
 
-      if (!apiKey || apiKey.trim() === '') {
+      // Validate API key before using it
+      if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
         throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
       }
+
+      // Clean the API key - remove any whitespace or newlines
+      const cleanApiKey = apiKey.replace(/\s+/g, '');
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Authorization': `Bearer ${cleanApiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
