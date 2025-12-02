@@ -5,6 +5,7 @@ import { useIdleTimer } from './hooks/useIdleTimer';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from './stores/appStore';
 import { initEmailJS } from './services/email';
+import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -40,10 +41,28 @@ function App() {
     console.log('EmailJS initialized');
   }, []);
 
+  // Get PayPal configuration from environment
+  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test';
+  const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox';
+
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <PayPalScriptProvider
+      options={{
+        clientId: paypalClientId,
+        currency: 'EUR',
+        intent: 'capture',
+        vault: paypalMode === 'sandbox' ? false : true,
+        'buyer-country': 'LV',
+        ...(paypalMode === 'sandbox' && {
+          'data-sdk-integration-source': 'developer-studio',
+        }),
+      }}
+      deferLoading={false}
+    >
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </PayPalScriptProvider>
   );
 }
 

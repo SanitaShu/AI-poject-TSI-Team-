@@ -5,7 +5,7 @@ import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DispenseAnimation } from '../components/DispenseAnimation';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { PayPalButtons } from '@paypal/react-paypal-js';
 import { useAppStore } from '../stores/appStore';
 import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
 import { medicines } from '../data/medicines';
@@ -164,22 +164,9 @@ export function CheckoutPage() {
   );
   console.log('  Client ID Type:', isSandboxClientId ? '🧪 Appears to be SANDBOX' : '⚠️ Might be LIVE');
 
-  // Wrap the entire component in PayPalScriptProvider to avoid re-initialization
+  // PayPalScriptProvider is now at App level - no need to wrap here
   return (
-    <PayPalScriptProvider
-      options={{
-        clientId: paypalClientId || 'test',
-        currency: 'EUR',
-        intent: 'capture',
-        vault: paypalMode === 'sandbox' ? false : true,
-        dataClientToken: undefined,
-        'buyer-country': 'LV',
-        ...(paypalMode === 'sandbox' && {
-          'data-sdk-integration-source': 'developer-studio',
-        }),
-      }}
-    >
-      <div className="min-h-[calc(100vh-180px)] px-4 sm:px-8 py-12">
+    <div className="min-h-[calc(100vh-180px)] px-4 sm:px-8 py-12">
         <div className="container max-w-2xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -384,6 +371,5 @@ export function CheckoutPage() {
         </motion.div>
       </div>
     </div>
-    </PayPalScriptProvider>
   );
 }
