@@ -26,6 +26,8 @@ export function CheckoutPage() {
   // Cleanup expired face recognition data when component mounts
   useEffect(() => {
     cleanupExpiredData();
+    // Clear any previous error messages
+    setError(null);
     // Set page title
     document.title = 'Checkout – Smart Medicine Vending';
 

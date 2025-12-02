@@ -17,10 +17,10 @@ function AppContent() {
     initializeAllMachinesInventory();
   }, [initializeInventory, initializeAllMachinesInventory]);
 
-  // Check if user is on checkout/payment pages
-  const isCheckoutOrPayment = location.pathname === '/checkout' ||
-                               location.pathname === '/review' ||
-                               location.pathname === '/payment';
+  // Check if user is on checkout/payment pages (handle both with and without base path)
+  const isCheckoutOrPayment = location.pathname.endsWith('/checkout') ||
+                               location.pathname.endsWith('/review') ||
+                               location.pathname.endsWith('/payment');
 
   // Idle timer - return to home after inactivity
   // Disabled during checkout/payment to allow time for PayPal
@@ -94,7 +94,7 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AppContent />
     </BrowserRouter>
   );
