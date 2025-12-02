@@ -144,28 +144,8 @@ export function CheckoutPage() {
     navigate('/');
   };
 
-  // Get PayPal configuration from environment variables
-  // Clean environment variables - remove quotes, whitespace, and newlines
-  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID?.toString().trim().replace(/^["']|["']$/g, '');
-  const paypalMode = (import.meta.env.VITE_PAYPAL_MODE || 'sandbox').toString().trim().replace(/^["']|["']$/g, ''); // Default to sandbox for safety
-
-  // Log PayPal configuration for debugging
-  console.log('🔧 PayPal Configuration:');
-  console.log('  Client ID:', paypalClientId ? `✅ ${paypalClientId}` : '❌ Missing');
-  console.log('  Mode Variable:', paypalMode);
-  console.log('  Expected Environment:', paypalMode === 'sandbox' ? '🧪 SANDBOX (Test Cards Work)' : '🔴 LIVE (Real Cards Only)');
-  console.log('');
-  console.log('⚠️ IMPORTANT: Check Network tab for PayPal SDK URL:');
-  console.log('  ✅ Sandbox: https://www.sandbox.paypal.com/sdk/js...');
-  console.log('  ❌ Live: https://www.paypal.com/sdk/js...');
-
-  // Check if Client ID appears to be from sandbox (sandbox IDs are typically shorter)
-  const isSandboxClientId = paypalClientId && (
-    paypalClientId.startsWith('AW') ||
-    paypalClientId.startsWith('Ab') ||
-    paypalClientId.length < 100 // Sandbox IDs are usually shorter than live IDs
-  );
-  console.log('  Client ID Type:', isSandboxClientId ? '🧪 Appears to be SANDBOX' : '⚠️ Might be LIVE');
+  // Get PayPal configuration from environment variables (cleaned in App.tsx)
+  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
   // PayPalScriptProvider is now at App level - no need to wrap here
   return (

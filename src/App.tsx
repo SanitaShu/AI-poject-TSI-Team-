@@ -55,15 +55,16 @@ function App() {
         return;
       }
 
-      // Clean environment variables - remove quotes, whitespace, and newlines
-      const paypalClientId = (import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test')
-        .toString()
-        .trim()
-        .replace(/^["']|["']$/g, ''); // Remove surrounding quotes
-      const paypalMode = (import.meta.env.VITE_PAYPAL_MODE || 'sandbox')
-        .toString()
-        .trim()
-        .replace(/^["']|["']$/g, ''); // Remove surrounding quotes
+      // Clean environment variables - remove ALL whitespace, quotes, and newlines
+      const paypalClientId = String(import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test')
+        .replace(/\s+/g, '') // Remove ALL whitespace including newlines
+        .replace(/^["']|["']$/g, '') // Remove surrounding quotes
+        .trim();
+
+      const paypalMode = String(import.meta.env.VITE_PAYPAL_MODE || 'sandbox')
+        .replace(/\s+/g, '') // Remove ALL whitespace
+        .replace(/^["']|["']$/g, '')
+        .trim();
 
       // Use sandbox or live PayPal URL based on mode
       const paypalBaseUrl = paypalMode === 'sandbox'
@@ -79,8 +80,14 @@ function App() {
 
       const script = document.createElement('script');
       // Enable both PayPal and card funding sources for sandbox
-      // Note: In sandbox, cards are available by default. We explicitly enable additional funding sources.
-      const sdkUrl = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&components=buttons,funding-eligibility`;
+      // Build URL carefully to avoid any formatting issues
+      const sdkParams = new URLSearchParams({
+        'client-id': paypalClientId,
+        'currency': 'EUR',
+        'intent': 'capture',
+        'components': 'buttons,funding-eligibility'
+      });
+      const sdkUrl = `${paypalBaseUrl}/sdk/js?${sdkParams.toString()}`;
       script.src = sdkUrl;
       script.async = true;
       script.defer = true; // Also defer for better loading
