@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Button } from './ui/button';
 
 interface ManualPayPalButtonsProps {
   total: number;
@@ -12,12 +13,32 @@ export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalB
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [renderedButtons, setRenderedButtons] = useState<string[]>([]);
+  const [retryCount, setRetryCount] = useState(0);
+  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    // Wait for PayPal SDK to load
+  const loadPayPalButtons = () => {
+    console.log('🔄 Attempting to load PayPal buttons...');
+    setIsLoading(true);
+    setLoadError(null);
+
+    let checkCount = 0;
+    const maxChecks = 100; // 10 seconds (100 * 100ms)
+
     const checkPayPalLoaded = setInterval(() => {
-      if (window.paypal) {
+      checkCount++;
+
+      if (!mountedRef.current) {
         clearInterval(checkPayPalLoaded);
+        return;
+      }
+
+      if (window.paypal) {
+        console.log('✅ PayPal SDK found!');
+        clearInterval(checkPayPalLoaded);
+
+        // Clear any existing buttons
+        if (paypalButtonRef.current) paypalButtonRef.current.innerHTML = '';
+        if (cardButtonRef.current) cardButtonRef.current.innerHTML = '';
 
         // Shared button configuration
         const createButtonConfig = (fundingSource?: any) => ({
@@ -66,23 +87,27 @@ export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalB
         });
 
         const rendered: string[] = [];
+        let renderAttempts = 0;
 
         // Render PayPal button
         if (paypalButtonRef.current && window.paypal.FUNDING) {
           const isEligible = window.paypal.isFundingEligible(window.paypal.FUNDING.PAYPAL);
-          console.log('PayPal funding eligible:', isEligible);
+          console.log('💰 PayPal funding eligible:', isEligible);
 
           if (isEligible) {
+            renderAttempts++;
             window.paypal
               .Buttons(createButtonConfig(window.paypal.FUNDING.PAYPAL))
               .render(paypalButtonRef.current)
               .then(() => {
-                console.log('✅ PayPal button rendered');
+                console.log('✅ PayPal button rendered successfully');
                 rendered.push('PayPal');
-                setRenderedButtons([...rendered]);
+                setRenderedButtons((prev) => [...prev, 'PayPal']);
+                checkRenderComplete();
               })
               .catch((err: Error) => {
-                console.error('Failed to render PayPal button:', err);
+                console.error('❌ Failed to render PayPal button:', err);
+                checkRenderComplete();
               });
           }
         }
@@ -90,52 +115,83 @@ export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalB
         // Render Card button
         if (cardButtonRef.current && window.paypal.FUNDING) {
           const isEligible = window.paypal.isFundingEligible(window.paypal.FUNDING.CARD);
-          console.log('Card funding eligible:', isEligible);
+          console.log('💳 Card funding eligible:', isEligible);
 
           if (isEligible) {
+            renderAttempts++;
             window.paypal
               .Buttons(createButtonConfig(window.paypal.FUNDING.CARD))
               .render(cardButtonRef.current)
               .then(() => {
-                console.log('✅ Card button rendered');
+                console.log('✅ Card button rendered successfully');
                 rendered.push('Card');
-                setRenderedButtons([...rendered]);
+                setRenderedButtons((prev) => [...prev, 'Card']);
+                checkRenderComplete();
               })
               .catch((err: Error) => {
-                console.error('Failed to render Card button:', err);
+                console.error('❌ Failed to render Card button:', err);
+                checkRenderComplete();
               });
           }
         }
 
-        // Set loading to false after attempting to render
+        let renderChecks = 0;
+        function checkRenderComplete() {
+          renderChecks++;
+          if (renderChecks >= renderAttempts) {
+            setTimeout(() => {
+              setIsLoading(false);
+              if (rendered.length === 0) {
+                setLoadError('No payment methods available. Please try refreshing.');
+              }
+            }, 500);
+          }
+        }
+
+        // Safety fallback - stop loading after 2 seconds
         setTimeout(() => {
           setIsLoading(false);
-          if (rendered.length === 0) {
-            setLoadError('No payment methods available. Please contact support.');
-          }
-        }, 1000);
-      }
-    }, 100);
+        }, 2000);
 
-    // Cleanup: stop checking after 10 seconds
-    const timeout = setTimeout(() => {
-      clearInterval(checkPayPalLoaded);
-      if (!window.paypal) {
-        setLoadError('PayPal SDK failed to load. Please refresh the page.');
+      } else if (checkCount >= maxChecks) {
+        console.error('❌ PayPal SDK failed to load after 10 seconds');
+        clearInterval(checkPayPalLoaded);
+        setLoadError('PayPal SDK failed to load. Please try refreshing the page.');
         setIsLoading(false);
       }
-    }, 10000);
+    }, 100);
+  };
+
+  useEffect(() => {
+    mountedRef.current = true;
+    setRenderedButtons([]);
+    loadPayPalButtons();
 
     return () => {
-      clearInterval(checkPayPalLoaded);
-      clearTimeout(timeout);
+      mountedRef.current = false;
     };
-  }, [total, onApprove, onError]);
+  }, [total, retryCount]);
+
+  const handleRetry = () => {
+    console.log('🔄 Manual retry triggered');
+    setRetryCount((prev) => prev + 1);
+  };
 
   if (loadError) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
-        <p className="text-sm text-red-800 dark:text-red-200 font-medium">{loadError}</p>
+      <div className="space-y-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
+          <p className="text-sm text-red-800 dark:text-red-200 font-medium mb-3">{loadError}</p>
+          <Button
+            onClick={handleRetry}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            🔄 Retry Loading PayPal
+          </Button>
+        </div>
+        <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+          Having trouble? Make sure you have a stable internet connection and try refreshing the page.
+        </p>
       </div>
     );
   }
@@ -145,6 +201,7 @@ export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalB
       <div className="text-center py-8">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Loading payment options...</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">This may take a few seconds</p>
       </div>
     );
   }
@@ -163,7 +220,7 @@ export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalB
             🔒 Secure Payment powered by <span className="font-semibold">PayPal</span>
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            Available: {renderedButtons.join(', ')}
+            ✅ Available: {renderedButtons.join(' & ')}
           </p>
         </div>
       )}

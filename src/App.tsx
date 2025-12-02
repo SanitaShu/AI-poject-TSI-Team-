@@ -39,11 +39,19 @@ function App() {
     initEmailJS();
     console.log('EmailJS initialized');
 
-    // Manually load PayPal SDK (safe - no querySelector errors)
+    // Manually load PayPal SDK with improved reliability
     const loadPayPalSDK = () => {
       // Check if already loaded
-      if (document.querySelector('script[data-paypal-sdk]')) {
-        console.log('PayPal SDK already loaded');
+      const existingScript = document.querySelector('script[data-paypal-sdk]');
+      if (existingScript) {
+        console.log('✅ PayPal SDK script already exists');
+        // Check if window.paypal is actually available
+        if (window.paypal) {
+          console.log('✅ PayPal SDK already loaded and ready');
+          return;
+        } else {
+          console.log('⚠️  PayPal script exists but SDK not ready yet...');
+        }
         return;
       }
 
@@ -75,19 +83,30 @@ function App() {
       const sdkUrl = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&components=buttons,funding-eligibility`;
       script.src = sdkUrl;
       script.async = true;
+      script.defer = true; // Also defer for better loading
       script.setAttribute('data-paypal-sdk', 'true'); // Safe marker (no special chars)
 
       console.log('📍 Full PayPal SDK URL:', sdkUrl);
+      console.log('⏳ Loading PayPal SDK...');
 
       script.onload = () => {
         console.log(`✅ PayPal SDK loaded successfully from ${paypalBaseUrl}`);
+        // Verify window.paypal is available
+        if (window.paypal) {
+          console.log('✅ window.paypal is ready!');
+          console.log('💰 Available funding sources:', Object.keys(window.paypal.FUNDING || {}));
+        } else {
+          console.warn('⚠️  Script loaded but window.paypal is not available yet');
+        }
       };
 
-      script.onerror = () => {
-        console.error('❌ Failed to load PayPal SDK');
+      script.onerror = (error) => {
+        console.error('❌ Failed to load PayPal SDK:', error);
+        console.error('   Check your internet connection and PayPal client ID');
       };
 
-      document.body.appendChild(script);
+      // Append to head for faster loading
+      document.head.appendChild(script);
     };
 
     loadPayPalSDK();
