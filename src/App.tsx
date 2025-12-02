@@ -50,13 +50,23 @@ function App() {
       const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test';
       const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox';
 
+      // Use sandbox or live PayPal URL based on mode
+      const paypalBaseUrl = paypalMode === 'sandbox'
+        ? 'https://www.sandbox.paypal.com'
+        : 'https://www.paypal.com';
+
+      console.log('🔧 PayPal SDK Configuration:');
+      console.log('  Mode:', paypalMode);
+      console.log('  Base URL:', paypalBaseUrl);
+      console.log('  Client ID:', paypalClientId ? '✅ Present' : '❌ Missing');
+
       const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&buyer-country=LV`;
+      script.src = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&buyer-country=LV`;
       script.async = true;
       script.setAttribute('data-paypal-sdk', 'true'); // Safe marker (no special chars)
 
       script.onload = () => {
-        console.log('✅ PayPal SDK loaded successfully');
+        console.log(`✅ PayPal SDK loaded successfully from ${paypalBaseUrl}`);
       };
 
       script.onerror = () => {

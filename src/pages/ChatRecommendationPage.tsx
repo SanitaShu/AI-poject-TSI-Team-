@@ -214,35 +214,48 @@ export function ChatRecommendationPage() {
       // Clean the API key - remove any whitespace or newlines
       const cleanApiKey = apiKey.replace(/\s+/g, '');
 
+      // Validate API key format
+      if (!cleanApiKey.startsWith('sk-')) {
+        throw new Error('Invalid OpenAI API key format. Key should start with "sk-"');
+      }
+
+      const requestBody = {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: medicineSystemPrompt,
+          },
+          ...messages.slice(-10).map(m => ({
+            role: m.isUser ? 'user' : 'assistant',
+            content: m.text,
+          })),
+          {
+            role: 'user',
+            content: inputValue,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      };
+
+      console.log('Making OpenAI API request...');
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${cleanApiKey}`,
         },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: medicineSystemPrompt,
-            },
-            ...messages.slice(-10).map(m => ({
-              role: m.isUser ? 'user' : 'assistant',
-              content: m.text,
-            })),
-            {
-              role: 'user',
-              content: inputValue,
-            },
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('OpenAI API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData?.error?.message || response.statusText;
+        throw new Error(`API request failed (${response.status}): ${errorMessage}`);
       }
 
       const data = await response.json();
