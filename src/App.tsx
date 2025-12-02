@@ -47,8 +47,15 @@ function App() {
         return;
       }
 
-      const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test';
-      const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox';
+      // Clean environment variables - remove quotes, whitespace, and newlines
+      const paypalClientId = (import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test')
+        .toString()
+        .trim()
+        .replace(/^["']|["']$/g, ''); // Remove surrounding quotes
+      const paypalMode = (import.meta.env.VITE_PAYPAL_MODE || 'sandbox')
+        .toString()
+        .trim()
+        .replace(/^["']|["']$/g, ''); // Remove surrounding quotes
 
       // Use sandbox or live PayPal URL based on mode
       const paypalBaseUrl = paypalMode === 'sandbox'

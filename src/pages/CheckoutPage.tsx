@@ -143,8 +143,9 @@ export function CheckoutPage() {
   };
 
   // Get PayPal configuration from environment variables
-  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
-  const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox'; // Default to sandbox for safety
+  // Clean environment variables - remove quotes, whitespace, and newlines
+  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID?.toString().trim().replace(/^["']|["']$/g, '');
+  const paypalMode = (import.meta.env.VITE_PAYPAL_MODE || 'sandbox').toString().trim().replace(/^["']|["']$/g, ''); // Default to sandbox for safety
 
   // Log PayPal configuration for debugging
   console.log('🔧 PayPal Configuration:');

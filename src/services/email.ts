@@ -2,11 +2,11 @@ import emailjs from '@emailjs/browser';
 
 const ADMIN_EMAIL = 'touficjandah@gmail.com';
 
-// EmailJS Configuration
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-const EMAILJS_TEMPLATE_ID_CUSTOMER = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_CUSTOMER;
-const EMAILJS_TEMPLATE_ID_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_ADMIN;
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+// EmailJS Configuration - Clean environment variables
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID?.toString().trim();
+const EMAILJS_TEMPLATE_ID_CUSTOMER = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_CUSTOMER?.toString().trim();
+const EMAILJS_TEMPLATE_ID_ADMIN = import.meta.env.VITE_EMAILJS_TEMPLATE_ID_ADMIN?.toString().trim();
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY?.toString().trim();
 
 export interface ReceiptData {
   transactionId: string;
@@ -165,8 +165,17 @@ function generateAdminNotificationHTML(data: ReceiptData): string {
  * Initialize EmailJS (call this once when app loads)
  */
 export function initEmailJS() {
+  console.log('📧 EmailJS Configuration:');
+  console.log('  Service ID:', EMAILJS_SERVICE_ID ? '✅ Present' : '❌ Missing');
+  console.log('  Customer Template:', EMAILJS_TEMPLATE_ID_CUSTOMER ? '✅ Present' : '❌ Missing');
+  console.log('  Admin Template:', EMAILJS_TEMPLATE_ID_ADMIN ? '✅ Present' : '❌ Missing');
+  console.log('  Public Key:', EMAILJS_PUBLIC_KEY ? '✅ Present' : '❌ Missing');
+
   if (EMAILJS_PUBLIC_KEY) {
     emailjs.init(EMAILJS_PUBLIC_KEY);
+    console.log('✅ EmailJS initialized successfully');
+  } else {
+    console.error('❌ EmailJS initialization failed - missing public key');
   }
 }
 
