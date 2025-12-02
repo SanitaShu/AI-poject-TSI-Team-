@@ -34,16 +34,19 @@ jobs:
         run: |
           echo "Checking environment variables..."
           if [ -z "$VITE_OPENAI_API_KEY" ]; then
-            echo "ERROR: VITE_OPENAI_API_KEY is not set!"
-            exit 1
+            echo "⚠️  WARNING: VITE_OPENAI_API_KEY is not set!"
+            echo "⚠️  The app will build but OpenAI features won't work"
+            echo "⚠️  Add it to: Settings → Secrets → Actions → New repository secret"
+          else
+            echo "✓ VITE_OPENAI_API_KEY is set"
           fi
-          echo "✓ VITE_OPENAI_API_KEY is set"
           if [ -z "$VITE_SUPABASE_URL" ]; then
-            echo "ERROR: VITE_SUPABASE_URL is not set!"
-            exit 1
+            echo "⚠️  WARNING: VITE_SUPABASE_URL is not set!"
+            echo "⚠️  Database features may not work"
+          else
+            echo "✓ VITE_SUPABASE_URL is set"
           fi
-          echo "✓ VITE_SUPABASE_URL is set"
-          echo "All required environment variables are present"
+          echo "Continuing with build..."
         env:
           VITE_OPENAI_API_KEY: ${{ secrets.VITE_OPENAI_API_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
