@@ -66,11 +66,16 @@ function App() {
       console.log('  Mode:', paypalMode);
       console.log('  Base URL:', paypalBaseUrl);
       console.log('  Client ID:', paypalClientId ? '✅ Present' : '❌ Missing');
+      console.log('  Client ID Length:', paypalClientId?.length);
+      console.log('  Client ID (first 20 chars):', paypalClientId?.substring(0, 20));
 
       const script = document.createElement('script');
-      script.src = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&buyer-country=LV`;
+      const sdkUrl = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&buyer-country=LV`;
+      script.src = sdkUrl;
       script.async = true;
       script.setAttribute('data-paypal-sdk', 'true'); // Safe marker (no special chars)
+
+      console.log('📍 Full PayPal SDK URL:', sdkUrl);
 
       script.onload = () => {
         console.log(`✅ PayPal SDK loaded successfully from ${paypalBaseUrl}`);
