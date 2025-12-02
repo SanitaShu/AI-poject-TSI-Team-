@@ -5,7 +5,6 @@ import { useIdleTimer } from './hooks/useIdleTimer';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from './stores/appStore';
 import { initEmailJS } from './services/email';
-import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -35,34 +34,45 @@ function AppContent() {
 }
 
 function App() {
-  // Initialize EmailJS on app mount
+  // Initialize EmailJS and PayPal SDK on app mount
   useEffect(() => {
     initEmailJS();
     console.log('EmailJS initialized');
+
+    // Manually load PayPal SDK (safe - no querySelector errors)
+    const loadPayPalSDK = () => {
+      // Check if already loaded
+      if (document.querySelector('script[data-paypal-sdk]')) {
+        console.log('PayPal SDK already loaded');
+        return;
+      }
+
+      const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test';
+      const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox';
+
+      const script = document.createElement('script');
+      script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&buyer-country=LV`;
+      script.async = true;
+      script.setAttribute('data-paypal-sdk', 'true'); // Safe marker (no special chars)
+
+      script.onload = () => {
+        console.log('✅ PayPal SDK loaded successfully');
+      };
+
+      script.onerror = () => {
+        console.error('❌ Failed to load PayPal SDK');
+      };
+
+      document.body.appendChild(script);
+    };
+
+    loadPayPalSDK();
   }, []);
 
-  // Get PayPal configuration from environment
-  const paypalClientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'test';
-  const paypalMode = import.meta.env.VITE_PAYPAL_MODE || 'sandbox';
-
   return (
-    <PayPalScriptProvider
-      options={{
-        clientId: paypalClientId,
-        currency: 'EUR',
-        intent: 'capture',
-        vault: paypalMode === 'sandbox' ? false : true,
-        'buyer-country': 'LV',
-        ...(paypalMode === 'sandbox' && {
-          'data-sdk-integration-source': 'developer-studio',
-        }),
-      }}
-      deferLoading={false}
-    >
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </PayPalScriptProvider>
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

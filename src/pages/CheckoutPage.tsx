@@ -5,7 +5,7 @@ import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DispenseAnimation } from '../components/DispenseAnimation';
-import { PayPalButtons } from '@paypal/react-paypal-js';
+import { ManualPayPalButtons } from '../components/ManualPayPalButtons';
 import { useAppStore } from '../stores/appStore';
 import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
 import { medicines } from '../data/medicines';
@@ -276,47 +276,11 @@ export function CheckoutPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <PayPalButtons
-                      style={{
-                        layout: 'vertical',
-                        color: 'blue',
-                        shape: 'rect',
-                        label: 'paypal',
-                        height: 48,
-                      }}
-                      fundingSource={undefined}
-                      createOrder={(data, actions) => {
-                        return actions.order.create({
-                          intent: 'CAPTURE',
-                          purchase_units: [
-                            {
-                              amount: {
-                                currency_code: 'EUR',
-                                value: total.toFixed(2),
-                              },
-                            },
-                          ],
-                        });
-                      }}
-                      onApprove={async (data, actions) => {
-                        const order = await actions.order?.capture();
-                        if (order?.status === 'COMPLETED') {
-                          handlePaymentSuccess(order.id);
-                        }
-                      }}
-                      onError={(err) => {
-                        console.error('PayPal Error:', err);
-                        setError('Payment was cancelled.');
-                      }}
-                      onCancel={() => {
-                        setError('Payment was cancelled.');
-                      }}
-                    />
-                    <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                      Powered by <span className="font-semibold">PayPal</span>
-                    </p>
-                  </div>
+                  <ManualPayPalButtons
+                    total={total}
+                    onApprove={handlePaymentSuccess}
+                    onError={setError}
+                  />
                 )}
 
                 {/* Back Button */}
