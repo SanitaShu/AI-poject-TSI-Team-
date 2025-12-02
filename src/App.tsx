@@ -70,7 +70,9 @@ function App() {
       console.log('  Client ID (first 20 chars):', paypalClientId?.substring(0, 20));
 
       const script = document.createElement('script');
-      const sdkUrl = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&buyer-country=LV`;
+      // Enable both PayPal and card funding sources for sandbox
+      // Note: In sandbox, cards are available by default. We explicitly enable additional funding sources.
+      const sdkUrl = `${paypalBaseUrl}/sdk/js?client-id=${paypalClientId}&currency=EUR&intent=capture&components=buttons,funding-eligibility`;
       script.src = sdkUrl;
       script.async = true;
       script.setAttribute('data-paypal-sdk', 'true'); // Safe marker (no special chars)

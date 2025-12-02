@@ -7,66 +7,113 @@ interface ManualPayPalButtonsProps {
 }
 
 export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalButtonsProps) {
-  const paypalRef = useRef<HTMLDivElement>(null);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const cardButtonRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [renderedButtons, setRenderedButtons] = useState<string[]>([]);
 
   useEffect(() => {
     // Wait for PayPal SDK to load
     const checkPayPalLoaded = setInterval(() => {
-      if (window.paypal && paypalRef.current) {
+      if (window.paypal) {
         clearInterval(checkPayPalLoaded);
-        setIsLoading(false);
 
-        // Render PayPal buttons using the global paypal object
-        window.paypal
-          .Buttons({
-            style: {
-              layout: 'vertical',
-              color: 'blue',
-              shape: 'rect',
-              label: 'paypal',
-              height: 48,
-            },
-            createOrder: (data: any, actions: any) => {
-              return actions.order.create({
-                intent: 'CAPTURE',
-                purchase_units: [
-                  {
-                    amount: {
-                      currency_code: 'EUR',
-                      value: total.toFixed(2),
-                    },
+        // Shared button configuration
+        const createButtonConfig = (fundingSource?: any) => ({
+          fundingSource: fundingSource,
+          style: {
+            layout: 'vertical',
+            color: 'blue',
+            shape: 'rect',
+            height: 48,
+            label: fundingSource === window.paypal.FUNDING.CARD ? 'pay' : 'paypal',
+            tagline: false,
+          },
+          createOrder: (data: any, actions: any) => {
+            return actions.order.create({
+              intent: 'CAPTURE',
+              purchase_units: [
+                {
+                  amount: {
+                    currency_code: 'EUR',
+                    value: total.toFixed(2),
                   },
-                ],
-              });
-            },
-            onApprove: async (data: any, actions: any) => {
-              try {
-                const order = await actions.order.capture();
-                if (order?.status === 'COMPLETED') {
-                  onApprove(order.id);
-                } else {
-                  onError('Payment was not completed. Please try again.');
-                }
-              } catch (err) {
-                console.error('PayPal onApprove error:', err);
-                onError('An error occurred during payment processing.');
+                },
+              ],
+            });
+          },
+          onApprove: async (data: any, actions: any) => {
+            try {
+              const order = await actions.order.capture();
+              if (order?.status === 'COMPLETED') {
+                onApprove(order.id);
+              } else {
+                onError('Payment was not completed. Please try again.');
               }
-            },
-            onError: (err: any) => {
-              console.error('PayPal Error:', err);
-              onError('Payment failed. Please try again.');
-            },
-            onCancel: () => {
-              onError('Payment was cancelled.');
-            },
-          })
-          .render(paypalRef.current)
-          .catch((err: Error) => {
-            console.error('Failed to render PayPal buttons:', err);
-            setLoadError('Failed to load PayPal buttons. Please refresh the page.');
-          });
+            } catch (err) {
+              console.error('PayPal onApprove error:', err);
+              onError('An error occurred during payment processing.');
+            }
+          },
+          onError: (err: any) => {
+            console.error('PayPal Error:', err);
+            onError('Payment failed. Please try again.');
+          },
+          onCancel: () => {
+            onError('Payment was cancelled.');
+          },
+        });
+
+        const rendered: string[] = [];
+
+        // Render PayPal button
+        if (paypalButtonRef.current && window.paypal.FUNDING) {
+          const isEligible = window.paypal.isFundingEligible(window.paypal.FUNDING.PAYPAL);
+          console.log('PayPal funding eligible:', isEligible);
+
+          if (isEligible) {
+            window.paypal
+              .Buttons(createButtonConfig(window.paypal.FUNDING.PAYPAL))
+              .render(paypalButtonRef.current)
+              .then(() => {
+                console.log('✅ PayPal button rendered');
+                rendered.push('PayPal');
+                setRenderedButtons([...rendered]);
+              })
+              .catch((err: Error) => {
+                console.error('Failed to render PayPal button:', err);
+              });
+          }
+        }
+
+        // Render Card button
+        if (cardButtonRef.current && window.paypal.FUNDING) {
+          const isEligible = window.paypal.isFundingEligible(window.paypal.FUNDING.CARD);
+          console.log('Card funding eligible:', isEligible);
+
+          if (isEligible) {
+            window.paypal
+              .Buttons(createButtonConfig(window.paypal.FUNDING.CARD))
+              .render(cardButtonRef.current)
+              .then(() => {
+                console.log('✅ Card button rendered');
+                rendered.push('Card');
+                setRenderedButtons([...rendered]);
+              })
+              .catch((err: Error) => {
+                console.error('Failed to render Card button:', err);
+              });
+          }
+        }
+
+        // Set loading to false after attempting to render
+        setTimeout(() => {
+          setIsLoading(false);
+          if (rendered.length === 0) {
+            setLoadError('No payment methods available. Please contact support.');
+          }
+        }, 1000);
       }
     }, 100);
 
@@ -96,17 +143,30 @@ export function ManualPayPalButtons({ total, onApprove, onError }: ManualPayPalB
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-gray-600 dark:text-gray-400">Loading PayPal...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Loading payment options...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div ref={paypalRef} />
-      <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
-        Powered by <span className="font-semibold">PayPal</span>
-      </p>
+    <div className="space-y-3">
+      {/* PayPal Button */}
+      <div ref={paypalButtonRef} className="min-h-[48px]" />
+
+      {/* Card Button */}
+      <div ref={cardButtonRef} className="min-h-[48px]" />
+
+      {renderedButtons.length > 0 && (
+        <div className="text-center">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            🔒 Secure Payment powered by <span className="font-semibold">PayPal</span>
+          </p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Available: {renderedButtons.join(', ')}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
