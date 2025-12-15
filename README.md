@@ -6,7 +6,7 @@ Project Duration: 13.10.2025 → 18.12.2025
 ## **Team Members**
 **Sanita Šulca** – Product & Domain Lead  
 **Vita Maurīte** – Data Engineer  
-**Mostafa Salem** – Data Scientist / Optimization Specialist  
+**Mostafa Salem** – Data Scientist
 **Toufic Jandah** – App & Chatbot Developer  
 **Joanns Engels** – Monitoring & Visualization Engineer
 
