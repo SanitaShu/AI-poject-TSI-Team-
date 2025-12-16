@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Demand Forecast Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin:20px; background:#f5f5f7; }
+    h1 { margin-bottom: 10px; }
+    .filters, .kpi-card, #trend, #profit_chart, #forecast {
+      background:white; padding:15px; border-radius:12px;
+      box-shadow:0 2px 6px rgba(0,0,0,.05);
+    }
+    .filters { margin-bottom:25px; }
+    .kpi-container { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:30px; }
+    .kpi-card { min-width:200px; }
+    .kpi-title { font-size:12px; text-transform:uppercase; color:#666; }
+    .kpi-value { font-size:24px; font-weight:600; }
+    table { margin-top:20px; width:100%; border-collapse:collapse; background:white; border-radius:12px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,.05); }
+    th, td { padding:8px 12px; }
+    th { background:#f0f0f0; }
+  </style>
+</head>
+
+<body>
+<h1>Demand Forecast Dashboard</h1>
+
+<form method="get" class="filters">
+  <label>Municipality</label>
+  <select name="municipality">
+    <option value="">All</option>
+    {% for m in municipalities %}
+      <option value="{{m}}" {% if request.args.get("municipality") == m %}selected{% endif %}>{{m}}</option>
+    {% endfor %}
+  </select>
+
+  <label>Start date</label>
+  <input type="date" name="start" value="{{ request.args.get('start','') }}">
+
+  <label>End date</label>
+  <input type="date" name="end" value="{{ request.args.get('end','') }}">
+
+  <button type="submit">Apply</button>
+</form>
+
+<div class="kpi-container">
+  <div class="kpi-card">
+    <div class="kpi-title">TOTAL REVENUE</div>
+    <div class="kpi-value">{{ total_revenue }} €</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-title">TOTAL PROFIT</div>
+    <div class="kpi-value">{{ total_profit }} €</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-title">PROFIT MARGIN</div>
+    <div class="kpi-value">{{ profit_margin }} %</div>
+  </div>
+</div>
+
+<div id="trend"></div>
+
+<h2>Profit vs Revenue</h2>
+<div id="profit_chart"></div>
+
+<h2>Forecast (Weekly + Confidence Interval)</h2>
+<div id="forecast"></div>
+
+<h2>Top 5 Municipalities</h2>
+<table>
+<tr><th>Municipality</th><th>Revenue (€)</th></tr>
+{% for row in top_muni %}
+<tr><td>{{row.Municipality}}</td><td>{{"%.2f"|format(row.Revenue)}}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Top 10 Products by Profit</h2>
+<table>
+<tr><th>Product</th><th>Name</th><th>Revenue</th><th>Profit</th></tr>
+{% for row in top_products %}
+<tr>
+  <td>{{row.Product_ID}}</td>
+  <td>{{row.Original_name}}</td>
+  <td>{{"%.2f"|format(row.Revenue)}}</td>
+  <td>{{"%.2f"|format(row.Profit_EUR)}}</td>
+</tr>
+{% endfor %}
+</table>
+
+<script>
+// === DAILY REVENUE & QUANTITY (last 60 days) ===
+const trendDates = {{ dates|tojson }};
+const trendRevenues = {{ revenues|tojson }};
+const trendQty = {{ quantities|tojson }};
+
+Plotly.newPlot("trend", [
+  {
+    x: trendDates,
+    y: trendQty,
+    type: "bar",
+    name: "Quantity",
+    yaxis: "y1",
+    opacity: 0.35
+  },
+  {
+    x: trendDates,
+    y: trendRevenues,
+    type: "scatter",
+    mode: "lines+markers",
+    name: "Revenue",
+    yaxis: "y2"
+  }
+], {
+  title: "Daily Revenue & Sales (last 60 days)",
+  barmode: "overlay",
+  yaxis: { title: "Units sold" },
+  yaxis2: { title: "Revenue (€)", overlaying: "y", side: "right" },
+  margin: { t: 40, l: 55, r: 55, b: 40 }
+});
+
+// === Revenue vs Profit (daily, last 60 days) ===
+const profitDates = {{ profit_dates|tojson }};
+const profitRevenues = {{ profit_revenues|tojson }};
+const profitValues = {{ profit_values|tojson }};
+
+Plotly.newPlot("profit_chart", [
+  { x: profitDates, y: profitRevenues, name:"Revenue", mode:"lines" },
+  { x: profitDates, y: profitValues,  name:"Profit",  mode:"lines" }
+], { title:"Revenue vs Profit (daily, last 60 days)", margin:{t:40,l:50,r:20,b:40} });
+
+// === FORECAST: weekly history + weekly forecast + CI ===
+const histWDates  = {{ hist_w_dates|tojson }};
+const histWActual = {{ hist_w_actual|tojson }};
+
+const futWDates = {{ fut_w_dates|tojson }};
+const futWYhat  = {{ fut_w_yhat|tojson }};
+const futWLow   = {{ fut_w_lower|tojson }};
+const futWHigh  = {{ fut_w_upper|tojson }};
+
+const forecastTraces = [];
+
+// history actual
+forecastTraces.push({
+  x: histWDates,
+  y: histWActual,
+  mode: "lines+markers",
+  name: "Weekly actual",
+});
+
+// CI band (future)
+if (futWDates.length > 0) {
+  forecastTraces.push({
+    x: futWDates,
+    y: futWHigh,
+    mode: "lines",
+    name: "Upper (60% CI)",
+    line: { width: 0 },
+    hoverinfo: "skip",
+    showlegend: false
+  });
+
+  forecastTraces.push({
+    x: futWDates,
+    y: futWLow,
+    mode: "lines",
+    name: "60% CI",
+    fill: "tonexty",
+    line: { width: 0 },
+    hoverinfo: "skip",
+    opacity: 0.25
+  });
+
+  // forecast line
+  forecastTraces.push({
+    x: futWDates,
+    y: futWYhat,
+    mode: "lines+markers",
+    name: "Forecast (weekly)",
+  });
+}
+
+Plotly.newPlot("forecast", forecastTraces, {
+  title: "Forecast: weekly aggregation + 60% confidence interval (next ~6 weeks)",
+  margin: { t: 40, l: 55, r: 20, b: 40 }
+});
+</script>
+
+</body>
+</html>
