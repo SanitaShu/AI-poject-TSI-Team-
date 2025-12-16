@@ -1,0 +1,68 @@
+Demand Forecast Dashboard
+Interactive web dashboard to evaluate sales performance, profitability, and demand forecasting using historical sales data. The dashboard is made public: source code is shared on GitHub, and application on Render is deployed and running.
+
+Features
+Total revenue, profit, and profit margin analysis.
+Data filtering by municipality and date range.
+Daily sales volume and revenue dynamics (last 60 days).
+Revenue vs Profit comparison over time.
+Demand forecasting with weekly aggregation and confidence interval.
+Top-5 municipalities by revenue.
+Top-10 products by profit.
+Tech Stack
+Backend
+
+Python
+Flask
+Pandas / NumPy
+Prophet (time series forecasting)
+Frontend
+
+HTML (Jinja2 templates)
+Plotly.js for interactive visualizations
+Deployment
+
+Gunicorn
+Render
+Project Structure
+├── app.py                       # Flask application
+├── requirements.txt             # Python dependencies
+├── FINAL_fake_purchase_data_with_machineID.xlsx  # Source dataset
+├── templates/
+│   └── index.html               # Dashboard HTML template
+└── README.md
+Local Installation and Run
+Clone the repository:
+git clone https://github.com/your-repo-name.git
+cd your-repo-name
+Install dependencies:
+pip install -r requirements.txt
+Run the application:
+python app.py
+Open in your browser:
+http://127.0.0.1:5000
+Deployment
+The application is deployed on Render and available for public access.
+
+Deployment details:
+
+Start command: gunicorn app:app
+Automatic redeployment on updates to the GitHub repository
+Forecasting Logic
+Demand forecasting is implemented using Prophet:
+
+Weekly data aggregation
+Forecast horizon of approximately 6 weeks
+60% confidence interval
+The forecast is intended for:
+
+Short-term demand assessment
+Supporting data-driven decision-making
+Notes
+The dataset of this project is synthetic (fake data), designed only for demonstration and educational purposes.
+
+Author
+Designed based on an analytical and educational project that included working with sales analysis in addition to demand forecasting.
+
+License
+Free for educational & demonstration purposes.
