@@ -236,3 +236,60 @@ VITE_OPENAI_API_KEY=your_openai_key
 - PayPal SDK (planned)
 
 ---
+# Data Scientist – Demand Modeling, Optimization & Placement Analysis (Mostafa’s Part)
+This part discusses the construction of data-centric models and optimization method used to estimate OTC medicine usage, evaluate demographic trends, and establish the optimal allocation of vending machines across municipalities in Latvia. The analysis has been built based on the cleaned dataset by the data engineering workflow and converts them into indicators for strategic strategies and dashboard visualization.
+
+## Step 1: Population Trend Analysis
+The official population statistics was used by municipality (2012-2024), areas of population growth which are long demographic trends were analyzed to identify the growth and declination of population. Population growth rate for each municipality was calculated to understand population trend rather than short-term variation.
+This step was important to recognize:
+	Suburban growing municipalities.
+	Declination of rural regions.
+	Stable urban centers.
+Usage of growth trend as proxy to guide through vending machine placements.
+For each municipality m, Growth Rate is calculated as:
+〖GrowthRate〗_m  =  (P_(m,2024)-P_(m,2012))/P_(m,2012) 
+Where:
+P_(m,2024) = population in 2024
+P_(m,2012) = population in 2012
+
+## Step 2: Demand Score Modeling
+Demographic data was converted to meaningful insights by using demand score which developed by merging population size in 2024 with population growth.
+〖DemandScore〗_m  = P_(m,2024)  x ( 1+ 〖GrowthRate〗_m)
+
+The demand score ensures that municipalities with growth rate and high population get higher concern and priority, while regions with decline in population and negative growth rate are proportionately getting lower weighting and with this technique comparison will reliable between municipalities with different demographic statistics and different sizes.
+〖StandardizedDemand 〗_m=  〖DemandScore〗_m/(∑_(i=1)^N▒〖DemandScore〗_i )
+
+## Step 3: Machine Allocation Optimization
+To allocate 50 vending machines across municipalities, optimization approach must be constrained. Machine counts were distributed based on standardized demand score, and this method approximates the optimization problem to align with Maximal Covering Location Problem (MCLP) principles to ensure:
+	Resource utilization accuracy
+	Highest population coverage
+	Avoiding oversupply in rural regions.
+   
+Machines were allocated using optimization proportionally and M = 50 Machines:
+〖Machines〗_m  = Round ( M x 〖StandardizedDemand 〗_m)
+
+Subject to: 
+∑_(i=1)^N▒〖Machines〗_m   = 50
+
+## Step 4: Coverage Efficiency Evaluation
+To evaluate the efficiency of allocation strategy, the average number of residents served per machine in each municipality must represent coverage efficiency metric, and this metric enables identification of potential oversupply and under-served Suburban areas.
+〖Coverage〗_m  =  (P_(m,2024)  )/(〖Machines〗_m  )
+CoverageEfficieny =  (∑_(m=1)^N▒P_(m,2024)   )/(50 )
+
+## Step 5: Model Validation Metrics
+However, there is no transactional sales data, demographic trend was determined using data science standardized evaluation metrics to compare predicted demand with observed sales at the municipal level:
+
+RMSE (Root Mean Squared Error): Calculate the value of error between observed sales and predicted demand for large deviation.
+RMSE =√(〖1/T  ∑_(t=1)^T▒〖(P_(m,t)^actual- P_(m,t)^predicted) 〗〗^2 )  
+
+MAPE (Mean Absolute Percentage Error): Calculate the accuracy of prediction across municipalities, enabling comparison between population size.
+MAPE =100/T  ∑_(t-1)^T▒|(P_(m,t)^actual- P_(m,t)^predicted)/(P_(m,t)^actual )|   
+
+Where: 
+T=number of years
+P_(m,t)^predicted=Trend estimate
+​​
+## Step 6: Dashboard Integration and Decision Support
+All model results with growth rates, demand score, machine allocation, coverage efficiency were developed and visualized into interactive dashboard in Power BI to allow stakeholders to compare between municipalities, make analysis for population, growth patterns, and explore machine distribution.
+
+---
