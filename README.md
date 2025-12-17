@@ -57,7 +57,7 @@ No real vending machines, medicine sales, or personal data processing are perfor
 - Project charter- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Project-Charter-.pdf
 
 
-#### Legal & Ethical Analysis
+#### Leal, Compliance & Ethical Analysis
 - Researched Latvian pharmaceutical law, OTC distribution rules, advertising regulations, and GDPR  
 - Defined ethical safeguards:
   - purchase limits (1 package per category per 24h)
@@ -65,7 +65,7 @@ No real vending machines, medicine sales, or personal data processing are perfor
   - safety warnings and disclaimers
 - Designed consent-based facial recognition logic with 24-hour data retention
 - Face recognition consent - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/FACE%20RECOGNITION%20CONSENT.pdf 
-- Legal, Etics and Compliance- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/LEGAL_ETHICAL_AND_COMPLIANCE_ASSESSMENT_AND_LEGAL%20PATH.pdf
+- Legal, Etics and Compliance and legal path- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/LEGAL_ETHICAL_AND_COMPLIANCE_ASSESSMENT_AND_LEGAL%20PATH.pdf
 
 
 #### Project Management & Coordination
