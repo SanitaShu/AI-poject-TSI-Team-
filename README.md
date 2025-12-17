@@ -53,7 +53,8 @@ No real vending machines, medicine sales, or personal data processing are perfor
 - Proposed the initial project idea addressing limited access to OTC medicines in Latvia  
 - Defined project objectives, scope, constraints, and success criteria  
 - Identified in-scope and out-of-scope features  
-- Project proposal - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/AI%20Project%20proposal%20.pdf 
+- Project proposal - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/AI%20Project%20proposal%20.pdf
+- Project charter- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Project-Charter-.pdf
 
 
 #### Legal & Ethical Analysis
@@ -83,9 +84,6 @@ No real vending machines, medicine sales, or personal data processing are perfor
 - Acted as the main tester of the app and chatbot  
 - Tested user flows, safety rules, consent logic, and ethical safeguards  
 - Test report - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/test1.pdf
-
-#### Documentation & Reporting
-- Project charter- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Project-Charter-.pdf
 
 ---
 
