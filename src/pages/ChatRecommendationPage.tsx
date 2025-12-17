@@ -211,12 +211,17 @@ export function ChatRecommendationPage() {
         throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.');
       }
 
-      // Clean the API key - remove any whitespace or newlines
-      const cleanApiKey = apiKey.replace(/\s+/g, '');
+      // Clean the API key - remove any whitespace, newlines, and invisible characters
+      const cleanApiKey = apiKey.trim().replace(/[\s\r\n\t]+/g, '');
 
       // Validate API key format
       if (!cleanApiKey.startsWith('sk-')) {
         throw new Error('Invalid OpenAI API key format. Key should start with "sk-"');
+      }
+
+      // Check for common problematic characters (but allow underscores, hyphens, alphanumerics)
+      if (/[\x00-\x1F\x7F]/.test(cleanApiKey)) {
+        throw new Error('Invalid control characters detected in API key. Please check your .env file.');
       }
 
       const requestBody = {
@@ -240,6 +245,8 @@ export function ChatRecommendationPage() {
       };
 
       console.log('Making OpenAI API request...');
+      console.log('API Key length:', cleanApiKey.length);
+      console.log('API Key prefix:', cleanApiKey.substring(0, 10) + '...');
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',

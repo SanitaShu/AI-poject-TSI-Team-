@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircleIcon, AlertCircleIcon, MailIcon } from 'lucide-react';
+import { CheckCircleIcon, AlertCircleIcon, MailIcon, PrinterIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DispenseAnimation } from '../components/DispenseAnimation';
@@ -11,6 +11,7 @@ import { useFaceRecognitionStore } from '../stores/faceRecognitionStore';
 import { medicines } from '../data/medicines';
 import { saveTransaction } from '../services/database';
 import { sendPurchaseEmails } from '../services/email';
+import { generateHTMLReceipt, type ReceiptData } from '../utils/receiptGenerator';
 import { useTranslation } from '../hooks/useTranslation';
 
 export function CheckoutPage() {
@@ -22,6 +23,7 @@ export function CheckoutPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
 
   // Cleanup expired face recognition data when component mounts
   useEffect(() => {
@@ -127,6 +129,32 @@ export function CheckoutPage() {
       // Cleanup expired face recognition data after successful payment
       cleanupExpiredData();
 
+      // Prepare receipt data for printing
+      const calculatedTotal = items.reduce((sum, item) => sum + item.price, 0);
+      const calculatedSubtotal = calculatedTotal / 1.12;
+      const calculatedVat = calculatedTotal - calculatedSubtotal;
+
+      const receipt: ReceiptData = {
+        purchaseId: transactionId,
+        date: new Date(),
+        machineId: vendingMachineId,
+        machineName: 'Smart Medicine Vending',
+        items: items.map(item => ({
+          id: item.medicineId,
+          name: item.medicineName,
+          quantity: item.quantity,
+          pricePerUnit: item.price,
+          total: item.price * item.quantity,
+        })),
+        subtotal: calculatedSubtotal,
+        vat: calculatedVat,
+        total: calculatedTotal,
+        paymentMethod: 'PayPal',
+        paypalOrderId: orderId,
+        customerEmail: email,
+      };
+      setReceiptData(receipt);
+
       // Simulate dispensing animation
       setTimeout(() => {
         setIsProcessing(false);
@@ -142,6 +170,26 @@ export function CheckoutPage() {
   const handleComplete = () => {
     clearCart();
     navigate('/');
+  };
+
+  const handlePrintReceipt = () => {
+    if (!receiptData) return;
+
+    // Generate HTML receipt
+    const receiptHTML = generateHTMLReceipt(receiptData);
+
+    // Open print window
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(receiptHTML);
+      printWindow.document.close();
+      printWindow.focus();
+
+      // Wait for content to load, then print
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
   };
 
   // Get PayPal configuration from environment variables (cleaned in App.tsx)
@@ -306,12 +354,25 @@ export function CheckoutPage() {
                 <p className="text-lg text-gray-600 dark:text-gray-400">
                   Thank you for your purchase
                 </p>
-                <Button
-                  onClick={handleComplete}
-                  className="h-14 px-12 text-lg rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  Back to Home
-                </Button>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  📧 Receipt has been sent to {email}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                  <Button
+                    onClick={handlePrintReceipt}
+                    variant="outline"
+                    className="h-14 px-8 text-base rounded-xl border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  >
+                    <PrinterIcon className="w-5 h-5 mr-2" />
+                    Print Receipt
+                  </Button>
+                  <Button
+                    onClick={handleComplete}
+                    className="h-14 px-12 text-base rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Back to Home
+                  </Button>
+                </div>
               </div>
             </Card>
           )}
