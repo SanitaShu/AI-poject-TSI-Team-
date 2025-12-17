@@ -85,7 +85,7 @@ export function ReviewAndCheckoutPage() {
                         {medicine.description}
                       </p>
                       <p className="text-lg font-heading font-semibold text-primary">
-                        ${medicine.price.toFixed(2)}
+                        €{medicine.price.toFixed(2)}
                       </p>
                     </div>
 
@@ -109,12 +109,12 @@ export function ReviewAndCheckoutPage() {
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-base">
                     <span className="text-muted-foreground">{t.checkout.subtotal}</span>
-                    <span className="text-foreground font-normal">${subtotal.toFixed(2)}</span>
+                    <span className="text-foreground font-normal">€{subtotal.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between text-base">
                     <span className="text-muted-foreground">{t.checkout.tax}</span>
-                    <span className="text-foreground font-normal">${tax.toFixed(2)}</span>
+                    <span className="text-foreground font-normal">€{tax.toFixed(2)}</span>
                   </div>
 
                   <Separator />
@@ -122,7 +122,7 @@ export function ReviewAndCheckoutPage() {
                   <div className="flex justify-between text-xl">
                     <span className="font-heading font-semibold text-foreground">{t.checkout.total}</span>
                     <span className="font-heading font-semibold text-primary">
-                      ${total.toFixed(2)}
+                      €{total.toFixed(2)}
                     </span>
                   </div>
                 </div>

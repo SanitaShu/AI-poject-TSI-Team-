@@ -92,7 +92,7 @@ export function AdminPanelPage() {
               <Card className="px-6 py-4">
                 <div className="text-sm text-muted-foreground">{t.admin.stockValue}</div>
                 <div className="text-2xl font-semibold text-foreground">
-                  ${getTotalStockValue().toFixed(2)}
+                  €{getTotalStockValue().toFixed(2)}
                 </div>
               </Card>
             </div>
@@ -317,7 +317,7 @@ export function AdminPanelPage() {
                                 </div>
                               </td>
                               <td className="px-6 py-4 text-sm text-foreground">
-                                ${medicine?.price.toFixed(2)}
+                                €{medicine?.price.toFixed(2)}
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 {alert === 'critical' && (
@@ -416,7 +416,7 @@ export function AdminPanelPage() {
                                 {transaction.medicines.length} {transaction.medicines.length === 1 ? t.checkout.item : t.checkout.items}
                               </td>
                               <td className="px-6 py-4 text-sm text-foreground font-medium">
-                                ${transaction.total.toFixed(2)}
+                                €{transaction.total.toFixed(2)}
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 <span
