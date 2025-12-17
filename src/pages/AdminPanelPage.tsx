@@ -60,6 +60,30 @@ export function AdminPanelPage() {
     return total;
   };
 
+  // Get restock button info based on current stock
+  const getRestockButtonInfo = (currentStock: number, targetStock: number = 50) => {
+    if (currentStock < targetStock) {
+      const needed = targetStock - currentStock;
+      return {
+        text: `Restock (+${needed})`,
+        disabled: false,
+        variant: 'default' as const,
+      };
+    } else if (currentStock === targetStock) {
+      return {
+        text: 'Stock OK',
+        disabled: true,
+        variant: 'outline' as const,
+      };
+    } else {
+      return {
+        text: 'Overstocked',
+        disabled: true,
+        variant: 'outline' as const,
+      };
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-180px)] px-8 py-12 bg-background">
       <div className="container max-w-7xl mx-auto">
@@ -330,12 +354,23 @@ export function AdminPanelPage() {
                                 )}
                               </td>
                               <td className="px-6 py-4">
-                                <Button
-                                  onClick={() => restockMachineProduct(selectedMachine, item.medicineId, 50)}
-                                  className="h-10 px-4 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90"
-                                >
-                                  {t.admin.restock}
-                                </Button>
+                                {(() => {
+                                  const buttonInfo = getRestockButtonInfo(item.stock, 50);
+                                  return (
+                                    <Button
+                                      onClick={() => restockMachineProduct(selectedMachine, item.medicineId, 50)}
+                                      disabled={buttonInfo.disabled}
+                                      variant={buttonInfo.variant}
+                                      className={`h-10 px-4 rounded-lg ${
+                                        buttonInfo.disabled
+                                          ? 'cursor-not-allowed opacity-60'
+                                          : 'bg-accent text-accent-foreground hover:bg-accent/90'
+                                      }`}
+                                    >
+                                      {buttonInfo.text}
+                                    </Button>
+                                  );
+                                })()}
                               </td>
                             </tr>
                           );
