@@ -348,4 +348,5 @@ P_(m,t)^predicted=Trend estimate
 ## Step 6: Dashboard Integration and Decision Support
 All model results with growth rates, demand score, machine allocation, coverage efficiency were developed and visualized into interactive dashboard in Power BI to allow stakeholders to compare between municipalities, make analysis for population, growth patterns, and explore machine distribution.
 
+- Power BI Dashboard - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.pbix
 ---
