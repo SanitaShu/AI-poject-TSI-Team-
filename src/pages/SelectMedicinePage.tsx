@@ -88,9 +88,14 @@ export function SelectMedicinePage() {
               <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
                 {t.medicineSelection.title}
               </h1>
-              <p className="text-lg text-muted-foreground mb-2">
+              <p className="text-lg text-muted-foreground mb-4">
                 {t.medicineSelection.subtitleGroups}
               </p>
+              <div className="bg-yellow-50 dark:bg-yellow-950/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-3 mb-4">
+                <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">
+                  {t.medicineSelection.safetyNotice}
+                </p>
+              </div>
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((group) => (
