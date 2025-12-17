@@ -15,7 +15,7 @@ export const translations = {
       subtitle: 'Your 24/7 AI-powered health assistant. Get personalized medicine recommendations and purchase safely with age verification.',
       startPurchase: 'Start Purchase',
       adminLogin: 'Admin Login',
-      features: 'Age verification required for purchase • AI-powered recommendations • Secure payment',
+      features: 'Face recognition for 24-hour purchase tracking • AI-powered recommendations • Secure payment',
       disclaimer: '⚕️ For serious medical conditions, please consult your pharmacist or doctor',
     },
 
@@ -344,7 +344,7 @@ export const translations = {
       subtitle: 'Jūsu 24/7 AI veselības asistents. Saņemiet personalizētus medikamentu ieteikumus un pērciet droši ar vecuma verifikāciju.',
       startPurchase: 'Sākt Pirkumu',
       adminLogin: 'Administratora Pieteikšanās',
-      features: 'Nepieciešama vecuma verifikācija • AI ieteikumi • Droša maksāšana',
+      features: 'Sejas atpazīšana 24 stundu pirkumu izsekošanai • AI ieteikumi • Droša maksāšana',
       disclaimer: '⚕️ Nopietnos veselības gadījumos, lūdzu, konsultējieties ar ārstu vai farmaceitu',
     },
 

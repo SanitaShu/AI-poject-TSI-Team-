@@ -89,7 +89,7 @@ export function WelcomePage() {
             <p className="text-sm text-muted-foreground">
               {t.welcome.features}
             </p>
-            <p className="text-xs text-muted-foreground italic">
+            <p className="text-lg text-foreground font-semibold">
               {t.welcome.disclaimer}
             </p>
           </motion.div>
