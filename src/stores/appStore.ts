@@ -119,10 +119,44 @@ export const useAppStore = create<AppState>()(
         }),
 
       addRecommendedMedicines: (ids) =>
-        set((state) => ({
-          recommendedMedicines: ids,
-          selectedMedicines: [...new Set([...state.selectedMedicines, ...ids])],
-        })),
+        set((state) => {
+          const newSelectedMedicines = [...state.selectedMedicines];
+
+          // Process each recommended medicine
+          ids.forEach((id) => {
+            const medicine = medicines.find((m) => m.id === id);
+            if (!medicine) return;
+
+            // Check if already selected
+            if (newSelectedMedicines.includes(id)) return;
+
+            // Check stock
+            const stock = state.inventory.find((item) => item.medicineId === id)?.stock || 0;
+            if (stock <= 0) return;
+
+            // Check if another medicine from the same category is already selected
+            const alreadySelectedFromCategory = newSelectedMedicines.find((medId) => {
+              const selectedMed = medicines.find((m) => m.id === medId);
+              return selectedMed?.group === medicine.group;
+            });
+
+            if (alreadySelectedFromCategory) {
+              // Replace the old selection with the new one (one per category rule)
+              const index = newSelectedMedicines.indexOf(alreadySelectedFromCategory);
+              newSelectedMedicines[index] = id;
+            } else {
+              // Add new selection if under limit
+              if (newSelectedMedicines.length < 5) {
+                newSelectedMedicines.push(id);
+              }
+            }
+          });
+
+          return {
+            recommendedMedicines: ids,
+            selectedMedicines: newSelectedMedicines,
+          };
+        }),
 
       clearCart: () => set({ selectedMedicines: [], recommendedMedicines: [] }),
 
