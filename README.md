@@ -32,6 +32,63 @@ The goal is to improve **healthcare accessibility**, **reduce medicine waste**, 
 - ⚙️ **Data-Driven Management:** Implements the **Data-Driven Scrum (DDS)** framework to enable measurable progress and continuous improvement.
 
 ---
+## Product Owner & Domain Lead (Legal, Ethics & Coordination) (Sanita’s part)  
+
+---
+
+### Overview
+
+The initial project idea was developed into a structured research prototype. The project scope was defined to ensure feasibility within time constraints, legal limitations, and academic requirements. Legal and ethical considerations, such as user safety, data protection, informed consent, and responsible medicine use, were integrated into the system design through purchase limits, age-appropriate medicine separation (adults/kids), safety warnings, and GDPR-compliant consent mechanisms. Team coordination and system testing supported alignment across development stages, ensuring that the final outcome was realistic, ethically responsible, and suitable for a real-world healthcare context.
+
+
+### Note
+
+This project is a **research prototype and simulation only**.  
+No real vending machines, medicine sales, or personal data processing are performed.
+
+
+### Key Contributions
+
+#### Project Ideation & Scope Definition
+- Proposed the initial project idea addressing limited access to OTC medicines in Latvia  
+- Defined project objectives, scope, constraints, and success criteria  
+- Identified in-scope and out-of-scope features  
+- Project proposal - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/AI%20Project%20proposal%20.pdf 
+
+
+#### Legal & Ethical Analysis
+- Researched Latvian pharmaceutical law, OTC distribution rules, advertising regulations, and GDPR  
+- Defined ethical safeguards:
+  - purchase limits (1 package per category per 24h)
+  - separation of adult and child medicines
+  - safety warnings and disclaimers
+- Designed consent-based facial recognition logic with 24-hour data retention  
+-  Legal, Etics and Compliance- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/LEGAL_ETHICAL_AND_COMPLIANCE_ASSESSMENT_AND_LEGAL%20PATH.pdf
+
+
+#### Project Management & Coordination
+- Assigned team roles and supported task breakdown  
+- Organised and participated in project meetings  
+- Coordinated communication and priorities across the team  
+-  **Kanban Board (Data-Driven Scrum):**  
+- Kanban board- https://github.com/users/SanitaShu/projects/2/views/2
+- Meeting minutes - https://github.com/SanitaShu/AI-poject-TSI-Team-/tree/main/Meeting%20minutes%20PDF
+
+#### Risk Management
+- Created and maintained the project risk register  
+- Focused on legal, ethical, data protection, and delivery risks  
+- Risk register - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Risk%20REGISTER.pdf
+
+#### Testing & Validation
+- Acted as the main tester of the app and chatbot  
+- Tested user flows, safety rules, consent logic, and ethical safeguards  
+- Test report - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/test1.pdf
+
+#### Documentation & Reporting
+- Project charter- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Project-Charter-.pdf
+
+---
+
 ## **Data Engineer – Data Sourcing, Cleaning & Preparation (Vita's Part)**
 This describes the process of collecting, cleaning, and preparing datasets used for the analysis of OTC medicines, pharmacy distribution, and population statistics in Latvia. Data was obtained from official open data sources, including the State Agency of Medicines and the Central Statistical Bureau of Latvia. The resulting datasets form the foundation for further analysis and visualization in the team’s joint project.
 
