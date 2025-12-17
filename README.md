@@ -63,8 +63,9 @@ No real vending machines, medicine sales, or personal data processing are perfor
   - purchase limits (1 package per category per 24h)
   - separation of adult and child medicines
   - safety warnings and disclaimers
-- Designed consent-based facial recognition logic with 24-hour data retention  
--  Legal, Etics and Compliance- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/LEGAL_ETHICAL_AND_COMPLIANCE_ASSESSMENT_AND_LEGAL%20PATH.pdf
+- Designed consent-based facial recognition logic with 24-hour data retention
+- Face recognition consent - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/FACE%20RECOGNITION%20CONSENT.pdf 
+- Legal, Etics and Compliance- https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/LEGAL_ETHICAL_AND_COMPLIANCE_ASSESSMENT_AND_LEGAL%20PATH.pdf
 
 
 #### Project Management & Coordination
