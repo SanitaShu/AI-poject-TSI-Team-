@@ -88,6 +88,7 @@ export const translations = {
     aiAssistant: {
       title: 'AI Health Assistant',
       subtitle: 'Describe your symptoms and get personalized medicine recommendations',
+      safetyNotice: '⚠️ Important Safety Notice: Improper use of medications can be harmful. Please consult a doctor before use.',
       placeholder: 'Type your symptoms here... (e.g., "I have a headache and fever")',
       send: 'Send',
       thinking: 'Thinking...',
@@ -417,6 +418,7 @@ export const translations = {
     aiAssistant: {
       title: 'AI Veselības Asistents',
       subtitle: 'Aprakstiet savus simptomus un saņemiet personalizētus medikamentu ieteikumus',
+      safetyNotice: '⚠️ Svarīgs drošības brīdinājums: Nepareiza medikamentu lietošana var būt kaitīga. Pirms lietošanas, lūdzu, konsultējieties ar ārstu.',
       placeholder: 'Ierakstiet savus simptomus šeit... (piemēram, "Man ir galvassāpes un drudzis")',
       send: 'Nosūtīt',
       thinking: 'Domāju...',

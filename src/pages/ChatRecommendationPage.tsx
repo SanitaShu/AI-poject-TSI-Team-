@@ -322,9 +322,14 @@ export function ChatRecommendationPage() {
             <h1 className="text-4xl font-heading font-semibold text-foreground mb-3">
               {t.aiAssistant.title}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground mb-4">
               {t.aiAssistant.subtitle}
             </p>
+            <div className="bg-yellow-50 dark:bg-yellow-950/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 max-w-3xl mx-auto">
+              <p className="text-base font-semibold text-yellow-900 dark:text-yellow-100">
+                {t.aiAssistant.safetyNotice}
+              </p>
+            </div>
           </div>
 
           <Card className="flex-1 flex flex-col overflow-hidden">
