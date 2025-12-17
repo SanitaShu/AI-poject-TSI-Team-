@@ -44,13 +44,7 @@ export function VerifyAgePage() {
     loadModels();
   }, [t]);
 
-  const handleScanFace = async () => {
-    // Show consent modal if user hasn't consented yet
-    if (!hasConsented) {
-      setShowConsent(true);
-      return;
-    }
-
+  const performFaceScan = async () => {
     try {
       setStatus('scanning');
       setMessage(t.ageVerification.capturingFace);
@@ -153,12 +147,22 @@ export function VerifyAgePage() {
     navigate('/');
   };
 
+  const handleScanFace = () => {
+    // Show consent modal if user hasn't consented yet
+    if (!hasConsented) {
+      setShowConsent(true);
+      return;
+    }
+    // User has consented, proceed with scan
+    performFaceScan();
+  };
+
   const handleConsentAgree = () => {
     setHasConsented(true);
     setShowConsent(false);
     // Automatically trigger face scan after consent
     setTimeout(() => {
-      handleScanFace();
+      performFaceScan(); // Call performFaceScan directly, bypassing consent check
     }, 300);
   };
 
