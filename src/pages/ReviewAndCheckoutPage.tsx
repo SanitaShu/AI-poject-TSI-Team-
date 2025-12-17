@@ -17,9 +17,10 @@ export function ReviewAndCheckoutPage() {
     selectedMedicines.includes(med.id)
   );
 
-  const subtotal = selectedMedicineDetails.reduce((sum, med) => sum + med.price, 0);
-  const tax = subtotal * 0.08;
-  const total = subtotal + tax;
+  // Prices displayed are WITH VAT (12%), so we reverse-calculate:
+  const total = selectedMedicineDetails.reduce((sum, med) => sum + med.priceWithVat, 0);
+  const subtotal = total / 1.12; // Base price before VAT
+  const vat = total - subtotal; // VAT amount (12%)
 
   const handleCheckout = () => {
     navigate('/checkout');
@@ -85,7 +86,7 @@ export function ReviewAndCheckoutPage() {
                         {medicine.description}
                       </p>
                       <p className="text-lg font-heading font-semibold text-primary">
-                        €{medicine.price.toFixed(2)}
+                        €{medicine.priceWithVat.toFixed(2)}
                       </p>
                     </div>
 
@@ -113,8 +114,8 @@ export function ReviewAndCheckoutPage() {
                   </div>
 
                   <div className="flex justify-between text-base">
-                    <span className="text-muted-foreground">{t.checkout.tax}</span>
-                    <span className="text-foreground font-normal">€{tax.toFixed(2)}</span>
+                    <span className="text-muted-foreground">VAT (12%)</span>
+                    <span className="text-foreground font-normal">€{vat.toFixed(2)}</span>
                   </div>
 
                   <Separator />
