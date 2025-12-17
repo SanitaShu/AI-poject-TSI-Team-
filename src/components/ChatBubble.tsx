@@ -35,7 +35,7 @@ export function ChatBubble({ message, isUser, timestamp }: ChatBubbleProps) {
               : 'bg-card text-card-foreground border border-border'
           }`}
         >
-          <p className="text-base leading-relaxed">{message}</p>
+          <p className="text-base leading-relaxed whitespace-pre-wrap">{message}</p>
         </div>
         {timestamp && (
           <span className="text-xs text-muted-foreground mt-2">
