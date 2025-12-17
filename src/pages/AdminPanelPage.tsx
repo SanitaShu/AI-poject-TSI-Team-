@@ -4,7 +4,6 @@ import {
   MapPinIcon,
   PackageIcon,
   TrendingUpIcon,
-  FileTextIcon,
   AlertCircleIcon,
   HelpCircleIcon,
   CheckCircleIcon,
@@ -18,14 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore } from '../stores/appStore';
 import { vendingMachineLocations } from '../data/vendingMachines';
 import { medicines } from '../data/medicines';
-import { recipes } from '../data/vendingMachines';
 import { useTranslation } from '../hooks/useTranslation';
 
 export function AdminPanelPage() {
   const { t } = useTranslation();
   const { allMachinesInventory, transactions, getMachineInventory, restockMachineProduct } = useAppStore();
   const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
-  const [selectedRecipe, setSelectedRecipe] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
   // Function to view machine details
@@ -99,7 +96,7 @@ export function AdminPanelPage() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-3xl grid-cols-5 h-14">
+            <TabsList className="grid w-full max-w-3xl grid-cols-4 h-14">
               <TabsTrigger value="overview" className="text-base">
                 <ActivityIcon className="w-5 h-5 mr-2" strokeWidth={2} />
                 {t.admin.overview}
@@ -115,10 +112,6 @@ export function AdminPanelPage() {
               <TabsTrigger value="purchases" className="text-base">
                 <TrendingUpIcon className="w-5 h-5 mr-2" strokeWidth={2} />
                 {t.admin.purchases}
-              </TabsTrigger>
-              <TabsTrigger value="recipes" className="text-base">
-                <FileTextIcon className="w-5 h-5 mr-2" strokeWidth={2} />
-                {t.admin.recipes}
               </TabsTrigger>
             </TabsList>
 
@@ -439,140 +432,6 @@ export function AdminPanelPage() {
                   </table>
                 </div>
               </Card>
-            </TabsContent>
-
-            {/* Recipes Tab */}
-            <TabsContent value="recipes" className="space-y-4">
-              <Card className="overflow-hidden">
-                <div className="p-6 border-b border-border">
-                  <h2 className="text-2xl font-heading font-semibold text-foreground">
-                    {t.admin.prescriptionManagement}
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t.admin.managePrescriptions}
-                  </p>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          {t.admin.recipeId}
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          {t.admin.patient}
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          {t.admin.doctor}
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">{t.admin.date}</th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          {t.admin.medications}
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          {t.admin.status}
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-normal text-foreground">
-                          {t.admin.actions}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {recipes.map((recipe) => (
-                        <tr key={recipe.id} className="hover:bg-muted/50">
-                          <td className="px-6 py-4 text-sm font-mono text-foreground">{recipe.id}</td>
-                          <td className="px-6 py-4 text-sm text-foreground">{recipe.patientName}</td>
-                          <td className="px-6 py-4 text-sm text-foreground">{recipe.doctorName}</td>
-                          <td className="px-6 py-4 text-sm text-foreground">
-                            {new Date(recipe.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-foreground">
-                            {recipe.medications.length} {recipe.medications.length === 1 ? t.admin.medicine : t.admin.medications}
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                recipe.status === 'fulfilled'
-                                  ? 'bg-green-500/20 text-green-700'
-                                  : recipe.status === 'pending'
-                                  ? 'bg-yellow-500/20 text-yellow-700'
-                                  : 'bg-red-500/20 text-red-700'
-                              }`}
-                            >
-                              {t.admin[recipe.status as keyof typeof t.admin]}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Button
-                              onClick={() => setSelectedRecipe(recipe.id)}
-                              className="h-10 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90"
-                            >
-                              {t.admin.viewDetails}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              {selectedRecipe && (
-                <Card className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-4">{t.admin.recipeDetails}</h3>
-                  {recipes
-                    .filter((r) => r.id === selectedRecipe)
-                    .map((recipe) => (
-                      <div key={recipe.id} className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <div className="text-sm text-muted-foreground">{t.admin.patientName}</div>
-                            <div className="text-base text-foreground font-medium">
-                              {recipe.patientName}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">{t.admin.doctorName}</div>
-                            <div className="text-base text-foreground font-medium">
-                              {recipe.doctorName}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="border-t border-border pt-4">
-                          <h4 className="text-lg font-semibold text-foreground mb-3">{t.admin.medications}</h4>
-                          {recipe.medications.map((med, index) => (
-                            <div key={index} className="p-4 bg-muted/30 rounded-lg mb-2">
-                              <div className="font-medium text-foreground">{med.medicineName}</div>
-                              <div className="text-sm text-muted-foreground mt-1">
-                                {t.admin.dosage}: {med.dosage} | {t.admin.frequency}: {med.frequency} | {t.admin.duration}:{' '}
-                                {med.duration}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {recipe.vendingMachineId && (
-                          <div className="border-t border-border pt-4">
-                            <div className="text-sm text-muted-foreground">{t.admin.fulfilledAt}</div>
-                            <div className="text-base text-foreground font-medium">
-                              {
-                                vendingMachineLocations.find((m) => m.id === recipe.vendingMachineId)
-                                  ?.name
-                              }{' '}
-                              ({recipe.vendingMachineId})
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {recipe.fulfillmentDate &&
-                                new Date(recipe.fulfillmentDate).toLocaleString()}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </Card>
-              )}
             </TabsContent>
           </Tabs>
         </motion.div>
