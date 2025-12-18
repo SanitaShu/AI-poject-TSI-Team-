@@ -350,3 +350,7 @@ All model results with growth rates, demand score, machine allocation, coverage 
 
 - Power BI Dashboard - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.pbix
 ---
+
+## Step 7: Analisys of machines financial performance and its forecast
+
+
