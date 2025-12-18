@@ -33,7 +33,8 @@
       "Bash(npx gh-pages -d dist --force)",
       "Bash(npx gh-pages -d dist -f)",
       "Bash(npx gh-pages-clean)",
-      "Bash(npx gh-pages:*)"
+      "Bash(npx gh-pages:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
