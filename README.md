@@ -350,6 +350,8 @@ All model results with growth rates, demand score, machine allocation, coverage 
 
 - Power BI Dashboard - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.pbix
 ---
+---
+# Monitoring & Visualization Engineer - Analisys of machines financial performance and its forecast  (Joann’s Part)
 
 ## Step 7: Analisys of machines financial performance and its forecast
 **Demand Forecast Dashboard** — an interactive web dashboard for analyzing sales performance, profitability, and short-term demand forecasting based on historical data.
