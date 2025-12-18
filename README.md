@@ -352,5 +352,10 @@ All model results with growth rates, demand score, machine allocation, coverage 
 ---
 
 ## Step 7: Analisys of machines financial performance and its forecast
+**Demand Forecast Dashboard** — an interactive web dashboard for analyzing sales performance, profitability, and short-term demand forecasting based on historical data.
+
+The dashboard provides insights into revenue, profit, margins, sales dynamics, top municipalities and products, and includes a weekly demand forecast with a confidence interval. Built with **Flask, Pandas, and Prophet**, visualized using **Plotly**, and publicly deployed on **Render**.
+Live demo: [https://demand-dashboard-19s4.onrender.com/](https://demand-dashboard-19s4.onrender.com/)
+The project source code is located in the `demand_dashboard` folder.
 
 
