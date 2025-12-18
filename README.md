@@ -10,6 +10,13 @@ Project Duration: 13.10.2025 → 18.12.2025
 **Toufic Jandah** – App & Chatbot Developer  
 **Joanns Engels** – Monitoring & Visualization Engineer
 
+## **🔗 Final Product Links**
+
+- **🌐 Live Demo:** [https://sanitashu.github.io/AI-poject-TSI-Team-/](https://sanitashu.github.io/AI-poject-TSI-Team-/)
+- **📦 GitHub Repository:** [https://github.com/SanitaShu/AI-poject-TSI-Team-](https://github.com/SanitaShu/AI-poject-TSI-Team-)
+- **📊 Power BI Dashboard:** [Machine Analysis Dashboard](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.pbix)
+- **📋 Kanban Board:** [Project Management Board](https://github.com/users/SanitaShu/projects/2/views/2)
+
 ## **🧭 Overview**
 
 In many Latvian towns, there is limited access to **24/7 pharmacies**, which means people often cannot obtain essential **OTC (over-the-counter)** medicines during night hours or emergencies.  
@@ -158,7 +165,14 @@ For the user interface of OTC vending machines, categories should be presented i
 
 Regulatory considerations on artificial intelligence for health https://www.who.int/publications/i/item/9789240078871 
 
-This ensures that all analytical components, visualizations, and UI logic were based on accurate information essential for the OTC medicine and population accessibility 
+This ensures that all analytical components, visualizations, and UI logic were based on accurate information essential for the OTC medicine and population accessibility
+
+### **📦 Final Deliverables**
+- **Cleaned Datasets:**
+  - [OTC Medicines (50 products)](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/otc_selection_50_balanced_v3.2.csv)
+  - [Population Analysis](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Population%20Analysis.csv)
+  - [Machine Distribution](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Distribution.csv)
+  - [Fake Purchase Data (Testing)](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/FINAL_fake_purchase_data_with_machineID.xlsx)
 
 ---
 
@@ -291,6 +305,14 @@ VITE_OPENAI_API_KEY=your_openai_key
 - OpenAI GPT-4 (planned)
 - PayPal SDK (planned)
 
+### **📦 Final Deliverables**
+- **🌐 Live Vending Machine App:** [https://sanitashu.github.io/AI-poject-TSI-Team-/](https://sanitashu.github.io/AI-poject-TSI-Team-/)
+- **📂 Source Code:** [GitHub Repository](https://github.com/SanitaShu/AI-poject-TSI-Team-)
+- **📖 Documentation:**
+  - [Implementation Guide](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/IMPLEMENTATION_GUIDE.md)
+  - [Setup Instructions](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/SETUP_INSTRUCTIONS.md)
+  - [EmailJS Setup](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/EMAILJS_SETUP_GUIDE.md)
+
 ---
 # Data Scientist – Demand Modeling, Optimization & Placement Analysis (Mostafa’s Part)
 This part discusses the construction of data-centric models and optimization method used to estimate OTC medicine usage, evaluate demographic trends, and establish the optimal allocation of vending machines across municipalities in Latvia. The analysis has been built based on the cleaned dataset by the data engineering workflow and converts them into indicators for strategic strategies and dashboard visualization.
@@ -348,7 +370,65 @@ P_(m,t)^predicted=Trend estimate
 ## Step 6: Dashboard Integration and Decision Support
 All model results with growth rates, demand score, machine allocation, coverage efficiency were developed and visualized into interactive dashboard in Power BI to allow stakeholders to compare between municipalities, make analysis for population, growth patterns, and explore machine distribution.
 
-- Power BI Dashboard - https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.pbix
+### **📦 Final Deliverables**
+- **📊 Power BI Dashboard:** [Machine Analysis Dashboard](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.pbix)
+- **📈 Analysis Files:**
+  - [Machine Analysis (Excel)](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Analysis.xlsx)
+  - [Machine Distribution Data](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Machine%20Distribution.csv)
+  - [Population Analysis](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/Population%20Analysis.csv)
+
+---
+
+## **📊 Monitoring & Visualization Engineer – Demand Forecast Dashboard (Joanns' Part)**
+
+This section describes the interactive web dashboard designed to evaluate sales performance, profitability, and demand forecasting using historical sales data. The dashboard provides real-time insights into revenue trends, demand patterns, and predictive analytics to support data-driven decision-making.
+
+### Overview
+
+The Demand Forecast Dashboard is a Flask-based web application that visualizes key performance indicators (KPIs) and provides demand forecasting using Prophet time series models. The dashboard is deployed on Render and accessible publicly for demonstration and educational purposes.
+
+### Key Features
+
+- **Revenue & Profitability Analysis:** Total revenue, profit, and profit margin metrics
+- **Data Filtering:** Interactive filtering by municipality and date range
+- **Sales Dynamics:** Daily sales volume and revenue trends (last 60 days)
+- **Comparative Analysis:** Revenue vs. Profit comparison over time
+- **Demand Forecasting:** Weekly aggregation with 60% confidence intervals (6-week horizon)
+- **Top Performers:** Top-5 municipalities by revenue and Top-10 products by profit
+- **Interactive Visualizations:** Powered by Plotly.js for dynamic charts
+
+### Tech Stack
+
+**Backend:**
+- Python (Flask framework)
+- Pandas & NumPy for data processing
+- Prophet for time series forecasting
+
+**Frontend:**
+- HTML (Jinja2 templates)
+- Plotly.js for interactive visualizations
+
+**Deployment:**
+- Gunicorn WSGI server
+- Render cloud platform
+- Automatic redeployment on GitHub updates
+
+### Forecasting Methodology
+
+The dashboard implements demand forecasting using Facebook's Prophet library:
+- Weekly data aggregation for trend analysis
+- Forecast horizon of approximately 6 weeks
+- 60% confidence interval for uncertainty quantification
+- Supports short-term demand assessment and inventory planning
+
+### **📦 Final Deliverables**
+- **🌐 Live Dashboard:** [https://demand-dashboard-19s4.onrender.com/](https://demand-dashboard-19s4.onrender.com/)
+- **📂 Source Code:** [demand_dashboard folder](https://github.com/SanitaShu/AI-poject-TSI-Team-/tree/main/demand_dashboard)
+- **📖 Documentation:** [Dashboard README](https://github.com/SanitaShu/AI-poject-TSI-Team-/blob/main/demand_dashboard/readme)
+
+### Note
+The dataset used in this dashboard is synthetic (fake data), designed for demonstration and educational purposes only. No real transaction or personal data is processed.
+
 ---
 ---
 # Monitoring & Visualization Engineer - Analisys of machines financial performance and its forecast  (Joann’s Part)
